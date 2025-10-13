@@ -21,6 +21,10 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+# -----------------------------
+# Page config
+# -----------------------------
+
 st.set_page_config(
     page_title="Investment Behavior Dashboard",
     page_icon="📊",
@@ -31,7 +35,7 @@ st.set_page_config(
 # -----------------------------
 # Config: file paths
 # -----------------------------
-DATA_DIR = Path("/Users/saritaaaaa/Documents/Project")
+DATA_DIR = Path("/Users/saritaaaaa/Documents/Investment_Behavior_Analysis")
 FINANCE_FILE = DATA_DIR / "Finance_Dataset_Cleaned.csv"
 SALARY_FILE  = DATA_DIR / "Salary_Dataset_Cleaned.csv"
 

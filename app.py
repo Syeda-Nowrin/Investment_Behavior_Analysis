@@ -197,13 +197,6 @@ for c in [col_salary, col_expyrs]:
     if c in salary.columns:
         salary[c] = pd.to_numeric(salary[c], errors="coerce")
 
-# -----------------------------
-# Page config
-# -----------------------------
-
-#st.set_page_config(page_title="Overview", layout="wide")
-#st.title("💹 Investment Behavior Analysis")
-#st.caption("Use the sidebar to filter. Charts update automatically.")
 
 # -----------------------------
 # Sidebar filters
@@ -500,27 +493,48 @@ sl = f_sal.copy().add_prefix("sal_")
 num_fn = [c for c in fn.columns if pd.api.types.is_numeric_dtype(fn[c])]
 num_sl = [c for c in sl.columns if pd.api.types.is_numeric_dtype(sl[c])]
 num_df = pd.concat([fn[num_fn], sl[num_sl]], axis=1)
-# Drop columns with no variation (std == 0)
 num_df = num_df.loc[:, num_df.std(numeric_only=True) > 0]
 
 preferred_keys = ["age", "expected", "salary", "experience", "monitor", "invests", "rank", "return"]
 prioritized = [c for c in num_df.columns if any(k in c.lower() for k in preferred_keys)]
 base = num_df[prioritized] if len(prioritized) >= 2 else num_df
 
+def make_unique(labels):
+    seen = {}
+    out = []
+    for lbl in labels:
+        if lbl in seen:
+            seen[lbl] += 1
+            out.append(f"{lbl} ({seen[lbl]})")
+        else:
+            seen[lbl] = 1
+            out.append(lbl)
+    return out
+
 if not base.empty and base.shape[1] >= 2:
     corr = base.corr(numeric_only=True)
-    # Pretty labels
-    corr.index = [pretty_heat_label(i) for i in corr.index]
-    corr.columns = [pretty_heat_label(i) for i in corr.columns]
-    fig4 = px.imshow(corr, text_auto=".2f", aspect="auto",
-                     title="Correlation between numeric features (finance + salary)")
+
+    # Build pretty, UNIQUE axis labels (don’t assign back to corr to avoid Narwhals DuplicateError)
+    x_labels = make_unique([pretty_heat_label(c) for c in corr.columns])
+    y_labels = make_unique([pretty_heat_label(r) for r in corr.index])
+
+    # Pass a NumPy array to px.imshow to bypass Narwhals’ DataFrame uniqueness check
+    fig4 = px.imshow(
+        corr.to_numpy(),
+        x=x_labels,
+        y=y_labels,
+        text_auto=".2f",
+        aspect="auto",
+        title="Correlation between numeric features (finance + salary)"
+    )
     fig4.update_xaxes(tickangle=45)
     fig4.update_yaxes(tickangle=0, automargin=True)
     st.plotly_chart(fig4, use_container_width=True)
 else:
     st.info("Not enough informative numeric columns to render a heatmap.")
 
-st.divider()
+
+#st.divider()
 
 # -----------------------------
 # Chart 5: Summary Statistics

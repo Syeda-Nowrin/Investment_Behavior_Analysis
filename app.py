@@ -26,12 +26,21 @@ import streamlit as st
 # Page config
 # -----------------------------
 
-st.set_page_config(
-    page_title="Investment Behavior Dashboard",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+#st.set_page_config(
+#    page_title="Investment Behavior Dashboard",
+#    page_icon="📊",
+#    layout="wide",
+#    initial_sidebar_state="expanded",
+#)
+
+# -----------------------------
+# Page config
+# -----------------------------
+
+st.set_page_config(page_title="Overview", layout="wide")
+st.title("💹 Investment Behavior Analysis")
+st.caption("Use the sidebar to filter. Charts update automatically.")
+
 
 # -----------------------------
 # Config: file paths

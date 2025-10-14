@@ -21,9 +21,6 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-st.caption(f"CWD: {Path.cwd()}")
-st.caption(f"Looking for: {FINANCE_FILE}  ->  exists? {FINANCE_FILE.exists()}")
-st.caption(f"Looking for: {SALARY_FILE}   ->  exists? {SALARY_FILE.exists()}")
 
 # -----------------------------
 # Page config
@@ -46,6 +43,18 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 FINANCE_FILE = DATA_DIR / "Finance_Dataset_Cleaned.csv"
 SALARY_FILE  = DATA_DIR / "Salary_Dataset_Cleaned.csv"
+
+
+
+# 3) DEBUG (optional; you can delete later)
+st.caption(f"CWD: {Path.cwd()}")
+st.caption(f"Looking for: {FINANCE_FILE}  ->  exists? {FINANCE_FILE.exists()}")
+st.caption(f"Looking for: {SALARY_FILE}   ->  exists? {SALARY_FILE.exists()}")
+
+# 4) Friendly guard (prevents crash if files missing)
+if not FINANCE_FILE.exists() or not SALARY_FILE.exists():
+    st.error("CSV files not found in `data/`. Check exact names/case and push them to GitHub.")
+    st.stop()
 
 
 # -----------------------------

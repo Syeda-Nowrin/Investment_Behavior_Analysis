@@ -1938,13 +1938,13 @@ span[data-testid="stMetricLabel"],
 div[data-testid="stMetricValue"],
 div[data-testid="stMetricDelta"] {
   text-align: center !important;
-  color: #2B2B2B !important;           /* dark gray */
+  
 }
 
 /* 3) Some Streamlit themes wrap value inside another div — target it too */
 div[data-testid="stMetricValue"] > div {
   text-align: center !important;
-  color: #2B2B2B !important;
+  
   font-weight: 700 !important;         /* keep value readable on light card */
 }
 

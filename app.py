@@ -238,7 +238,7 @@ st.markdown("""
   border: 1px solid rgba(91,192,190,.35);
   border-radius: 10px;
   padding: 8px 10px;
-  background: #1c2541;              /* default (matches your theme) */
+  background: #ffffff;              /* default (matches your theme) */
   color: #e0e0e0;
   transition: background .15s ease, transform .15s ease, border-color .15s ease;
 }
@@ -321,13 +321,13 @@ st.sidebar.markdown(
 
 # Navigation items
 nav_items = {
-    "Overview Dashboard": "🏠",
-    "Investment Behavior": "📊",
-    "Salary & Education Insights": "🎓",
-    "Relationship Between Income & Investment": "💼",
-    "Demographics & Behavioral Patterns": "🌍",
-    "Interactive Data Explorer": "🧮",
-    "Insights & Storytelling": "💡"
+    "Overview Dashboard": "",
+    "Investment Behavior": "",
+    "Salary & Education Insights": "",
+    "Relationship Between Income & Investment": "",
+    "Demographics & Behavioral Patterns": "",
+    "Interactive Data Explorer": "",
+    "Insights & Storytelling": ""
 }
 
 # Handle navigation state

@@ -1093,9 +1093,9 @@ elif page == "Salary & Education Insights":
 
 
 # =============================================================
-# PAGE 4: RELATIONSHIP BETWEEN INCOME & INVESTMENT
+# PAGE 4: INCOME & INVESTMENT RELATIONSHIP
 # =============================================================
-elif page == "Relationship Between Income & Investment":
+elif page == "Income & Investment Relationship":
     #st.subheader("Relationship Between Income & Investment")
 
     # ---------------------------

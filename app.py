@@ -36,7 +36,30 @@ import plotly.express as px
 import streamlit as st
 import re
 
+# ---- Global Plotly light-gray background ----
+import plotly.io as pio
+import plotly.graph_objects as go
+
+BG = "#E0E0E0"     # light gray (tweak if you prefer)
+GRID = "#C8C8C8"   # grid line gray
+AXIS = "#666666"   # axis line/label gray
+
+pio.templates["lightgray_bg"] = go.layout.Template(
+    layout=dict(
+        paper_bgcolor=BG,   # outside the plotting area
+        plot_bgcolor=BG,    # inside the plotting area
+        xaxis=dict(gridcolor=GRID, zerolinecolor=GRID, linecolor=AXIS),
+        yaxis=dict(gridcolor=GRID, zerolinecolor=GRID, linecolor=AXIS),
+        legend=dict(bgcolor=BG),
+        coloraxis=dict(colorbar=dict(bgcolor=BG)),  # affects colorbars (heatmaps, etc.)
+    )
+)
+# Apply on top of Streamlit/Plotly's default theme
+pio.templates.default = "plotly+lightgray_bg"
+
+
 from pathlib import Path
+
 
 # -------------------------------------------------------------
 # 1. APP CONFIGURATION
@@ -1657,7 +1680,6 @@ elif page == "Interactive Data Explorer":
             else:
                 st.warning("⚠️ Investment type column not found in dataset.")
 
-   
 
         # ---------------------------
         # 3️⃣ Monitoring Frequency (Bar)

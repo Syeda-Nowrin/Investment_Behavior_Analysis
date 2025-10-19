@@ -324,7 +324,7 @@ nav_items = {
     "Overview Dashboard": "",
     "Investment Behavior": "",
     "Salary & Education Insights": "",
-    "Relationship Between Income & Investment": "",
+    "Income & Investment Relationship": "",
     "Demographics & Behavioral Patterns": "",
     "Interactive Data Explorer": "",
     "Insights & Storytelling": ""

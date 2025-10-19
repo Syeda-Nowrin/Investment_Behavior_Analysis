@@ -886,7 +886,7 @@ elif page == "Salary & Education Insights":
         sal_base[years_col] = sal_base[col_expband].apply(_mid_from_band)
 
     # ---------- Page-level filters (collapsed, empty by default) ----------
-    with st.expander("Refine Results (Page Filters)", expanded=False):
+    with st.expander("Refine Page Filters", expanded=False):
         _gender_opts  = sorted(sal_base["__Gender"].dropna().unique()) if "__Gender" in sal_base.columns else []
         _edu_opts     = sorted(sal_base[col_edu].dropna().unique())    if col_edu and (col_edu in sal_base.columns) else []
         _expband_opts = sorted(sal_base[col_expband].dropna().unique()) if col_expband and (col_expband in sal_base.columns) else []
@@ -1416,7 +1416,7 @@ elif page == "Demographics & Behavioral Patterns":
     # ---------------------------
     # Page-level filters (collapsed, empty defaults)
     # ---------------------------
-    with st.expander("Refine Results (Page Filters)", expanded=False):
+    with st.expander("Refine Page Filters", expanded=False):
         g_opts = sorted(combo["Gender"].dropna().unique()) if "Gender" in combo else []
         a_opts = sorted(combo["AgeGroup"].dropna().unique()) if "AgeGroup" in combo else []
         e_opts = sorted(combo["ExpBand"].dropna().unique()) if "ExpBand" in combo else []

@@ -35,6 +35,7 @@ import numpy as np
 import plotly.express as px
 import streamlit as st
 import re
+
 from pathlib import Path
 
 # -------------------------------------------------------------
@@ -582,6 +583,8 @@ elif page == "Investment Behavior":
     clean_return = None
     if col_return and (col_return in ib_fin.columns):
         clean_return = parse_expected_return(ib_fin[col_return])
+
+    
 
     # ---------------------------
     # Chart 1: Risk Appetite by Age Group (stacked bar)
@@ -1631,7 +1634,8 @@ elif page == "Interactive Data Explorer":
     with tab_fin:
         st.markdown("### Finance Dataset")
 
-        grid1a, grid1b, grid1c = st.columns([1, 1, 1])
+        #grid1a, grid1b, grid1c = st.columns([1, 1, 1])
+        grid1a, grid1c = st.columns([1, 1])
 
         # ---------------------------
         # 1️⃣ Investment Type Distribution (Pie)
@@ -1653,34 +1657,7 @@ elif page == "Interactive Data Explorer":
             else:
                 st.warning("⚠️ Investment type column not found in dataset.")
 
-        # ---------------------------
-        # 2️⃣ Expected Return by Age Group (Box)
-        # ---------------------------
-        with grid1b:
-            age_cols = [c for c in fin_view.columns if re.search(r"age", c, flags=re.I)]
-            return_cols = [c for c in fin_view.columns if re.search(r"return", c, flags=re.I)]
-
-            age_col = age_cols[0] if age_cols else None
-            return_col = return_cols[0] if return_cols else None
-
-            if age_col and return_col:
-                tmp = fin_view[[age_col, return_col]].dropna()
-                tmp[return_col] = _to_num(tmp[return_col])
-                tmp = tmp.dropna()
-                if not tmp.empty:
-                    fig_box = px.box(tmp, x=age_col, y=return_col, color=age_col,
-                                     title="Expected Return by Age Group (%)",
-                                     color_discrete_sequence=px.colors.sequential.Purples)
-                    fig_box.update_layout(xaxis_title="Age Group", yaxis_title="Expected Return (%)")
-                    st.plotly_chart(fig_box, use_container_width=True)
-                    st.caption("""
-                    **What it shows:**  
-                    - Compares how return expectations differ by age group.  
-                    - The box height shows variability, while the line shows the median expected return.  
-                    - Useful for spotting generational differences in investment optimism.
-                    """)
-            else:
-                st.warning("⚠️ Could not detect Age or Return column in Finance dataset.")
+   
 
         # ---------------------------
         # 3️⃣ Monitoring Frequency (Bar)

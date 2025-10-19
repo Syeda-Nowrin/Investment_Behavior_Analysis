@@ -226,6 +226,53 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+st.markdown("""
+<style>
+/* RADIO BASE — tidy spacing */
+[data-testid="stSidebar"] [data-testid="stRadio"] > div[role="radiogroup"] {
+  gap: 6px !important;
+}
+
+/* EACH OPTION CONTAINER */
+[data-testid="stSidebar"] [data-testid="stRadio"] label {
+  border: 1px solid rgba(91,192,190,.35);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #1c2541;              /* default (matches your theme) */
+  color: #e0e0e0;
+  transition: background .15s ease, transform .15s ease, border-color .15s ease;
+}
+
+/* HOVER */
+[data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
+  background: #3a506b;
+  border-color: #5bc0be;
+  transform: translateX(3px);
+}
+
+/* ACTIVE / SELECTED STATE — highlight current page */
+[data-testid="stSidebar"] [data-testid="stRadio"] label[aria-checked="true"],
+/* Fallback selector (older Streamlit builds) */
+[data-testid="stSidebar"] [data-testid="stRadio"] div[aria-checked="true"] label {
+  background: #5bc0be !important;   /* your accent color */
+  border-color: #5bc0be !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(91,192,190,.35);
+}
+
+/* Make the emoji + text align nicely */
+[data-testid="stSidebar"] [data-testid="stRadio"] label p {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+/* Remove the default radio circle (purely visual; click still works) */
+[data-testid="stSidebar"] [data-testid="stRadio"] svg {
+  display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # -------------------------------------------------------------
 # 6. SIDEBAR NAVIGATION + FILTERS
@@ -287,12 +334,24 @@ nav_items = {
 if "page" not in st.session_state:
     st.session_state.page = list(nav_items.keys())[0]
 
-for page_label, icon in nav_items.items():
-    btn_class = "nav-button"
-    if st.session_state.page == page_label:
-        btn_class += " nav-active"
-    if st.sidebar.button(f"{icon}  {page_label}", key=page_label, use_container_width=True):
-        st.session_state.page = page_label
+# --- Left nav: radio with active highlight ---
+pages = list(nav_items.keys())
+# keep current page on reruns
+if "page" not in st.session_state:
+    st.session_state.page = pages[0]
+
+# compute current index so radio highlights the active one
+_current_idx = pages.index(st.session_state.page)
+
+choice = st.sidebar.radio(
+    label="Navigation",
+    options=pages,
+    index=_current_idx,
+    format_func=lambda k: f"{nav_items[k]}  {k}",
+    label_visibility="collapsed",
+    key="nav_radio",
+)
+st.session_state.page = choice  # update current page
 
 st.sidebar.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
 st.sidebar.markdown('<div class="filter-header">Filter</div>', unsafe_allow_html=True)

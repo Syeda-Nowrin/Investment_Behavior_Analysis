@@ -340,7 +340,9 @@ if page == "Overview Dashboard":
     c1, c2, c3, c4 = st.columns(4)
     with c1: st.metric("Total Survey Respondents", f"{total_respondents:,}")
     with c2: st.metric("Average Salary", f"{avg_salary:,.0f}" if pd.notna(avg_salary) else "—")
-    with c3: st.metric("Average Expected Return (%)", f"{avg_return:.1f}%" if pd.notna(avg_return) else "—")
+    with c3: st.metric("Highest Investors (Gender)", (lambda s: f"{s.value_counts().idxmax()} ({(s.value_counts().max()*100.0/s.size):.1f}%)" if s.size else "—")(finance[col_gender].dropna() if (col_gender and (col_gender in finance.columns)) else pd.Series(dtype=object)))
+
+
     with c4: st.metric("Most Common Education Level", common_edu)
 
     st.divider()

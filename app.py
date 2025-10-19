@@ -43,27 +43,26 @@ from pathlib import Path
 # 1. APP CONFIGURATION
 # -------------------------------------------------------------
 st.set_page_config(page_title="Investment Behavior Analysis", page_icon= "🪙", layout="wide", initial_sidebar_state="expanded")
+
 st.markdown("""
 <style>
-/* Turn any st.container(border=True) into a light-purple card */
-section[data-testid="stContainer"][class*="st-emotion-cache"][style*="border: 1px"]{
-  background: #F3EAFF;                /* very light purple */
-  border: 1px solid #D9C7FF;          /* soft purple border */
-  border-radius: 16px !important;
-  box-shadow: 0 10px 24px rgba(92, 52, 179, .25),  /* outer shadow (3D) */
-              inset 0 1px 0 rgba(255,255,255,.8);  /* subtle top highlight */
-  padding: 16px;                       /* comfy inner spacing */
+/* Full app background */
+[data-testid="stAppViewContainer"] {
+  background-color: #EDEDED !important;   /* light gray page background */
 }
 
-/* Optional: make plotly charts blend into the card */
-div[data-testid="stPlotlyChart"] > div{
+/* Make the Streamlit header transparent so the gray shows through */
+header, [data-testid="stHeader"] {
   background: transparent !important;
 }
 
-/* Optional: tidy section subtitles inside cards */
-h3, h4 { margin-top: .25rem; }
+/* Main block transparent so only the page bg shows */
+main, [data-testid="stMain"] {
+  background: transparent !important;
+}
 </style>
 """, unsafe_allow_html=True)
+
 
 # -------------------------------------------------------------
 # 2. LOAD DATASETS

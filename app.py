@@ -520,7 +520,7 @@ if page == "Overview Dashboard":
         
         st.markdown("""
             ### Understanding the Correlation Heatmap
-                This chart shows how different numerical factors are connected in your dataset — like **Age**, **Experience**, **Salary**, and **Expected Return**.
+                This chart shows how different numerical factors are connected in your dataset — like Age, Experience, Salary, and Expected Return.
 
                 Each square compares two factors and tells you how strongly they move together:
                     - Dark Blue → Strong positive relationship (when one increases, the other also increases)
@@ -530,9 +530,9 @@ if page == "Overview Dashboard":
             ### What You Can See:
                 - Age ↔ Experience: Older people usually have more years of experience → Strong positive relationship.  
                 - Experience ↔ Salary: More experience often means a higher salary → Moderate to strong positive correlation.  
-                - Age ↔ Salary:** Older respondents generally earn a bit more → Moderate positive relationship.  
-                - Age ↔ Expected Return:** Younger people expect higher returns, older people prefer safer options → Slight negative correlation.  
-                - Experience ↔ Expected Return:** Experienced professionals have more realistic return goals → Weak negative relationship.  
+                - Age ↔ Salary: Older respondents generally earn a bit more → Moderate positive relationship.  
+                - Age ↔ Expected Return: Younger people expect higher returns, older people prefer safer options → Slight negative correlation.  
+                - Experience ↔ Expected Return: Experienced professionals have more realistic return goals → Weak negative relationship.  
                 - Salary ↔ Expected Return:** Higher-income respondents prefer stability → Weak negative correlation.
 
             ### Quick Summary:
@@ -2062,4 +2062,3 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 # -------------------------------------------------------------------------------
-

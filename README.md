@@ -76,7 +76,14 @@ streamlit run app.py
 
 Then open the URL Streamlit prints (usually http://localhost:8501).
 
-**Tip:** If you change CSV locations or names, update `FIN_PATH` and `SAL_PATH` in `app.py`.
+---
+
+## Live Dashboard
+
+Explore the interactive dashboard here:  
+🔗 [Investment Behavior Analysis Dashboard](https://investmentbehavioranalysis-564ucdpvytoeuaejns4wrx.streamlit.app/)
+
+This live Streamlit app allows you to visualize behavioral finance patterns — explore relationships between income, education, risk appetite, and investment preferences in an interactive way.
 
 ---
 

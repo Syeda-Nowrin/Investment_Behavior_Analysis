@@ -17,18 +17,6 @@
 #   pip install streamlit pandas numpy plotly
 # -------------------------------------------------------------------
 
-# app.py
-# -------------------------------------------------------------------
-# Investment & Salary EDA Dashboard — Left Navigation Version
-# -------------------------------------------------------------------
-# Libraries required:
-#   pip install streamlit pandas numpy plotly
-# -------------------------------------------------------------------
-
-# =============================================================
-# MadeForYou Investment Insights Dashboard
-# Full Streamlit App — All Pages + Comments
-# =============================================================
 
 import pandas as pd
 import numpy as np
@@ -552,9 +540,9 @@ if page == "Overview Dashboard":
     st.divider()
 
     # -----------------------------
-    # Summary Statistics (Numeric Fields)
+    # Summary Statistics (Numeric Fields) — Finance dataset
     # -----------------------------
-    st.subheader("Summary Statistics (Numeric Fields)")
+    st.subheader("Summary Statistics (Numeric Fields) — Finance")
 
     numeric_cols = finance.select_dtypes(include=[np.number])
     if not numeric_cols.empty:
@@ -574,6 +562,30 @@ if page == "Overview Dashboard":
     else:
         st.warning("No numeric columns available for summary statistics.")
 
+
+    # -----------------------------
+    # Summary Statistics (Numeric Fields) — Salary dataset
+    # -----------------------------
+    st.subheader("Summary Statistics (Numeric Fields) — Salary")
+
+    numeric_cols = salary.select_dtypes(include=[np.number])
+    if not numeric_cols.empty:
+        desc = numeric_cols.describe().T
+        desc["median"] = numeric_cols.median()
+        st.dataframe(desc[["mean", "median", "min", "max"]].round(2))
+        st.markdown("""
+                This table summarizes important numerical data. It shows:  
+                    - **Mean:** The average value  
+                    - **Median:** The middle value  
+                    - **Min/Max:** The smallest and largest numbers
+
+            For example, in salary data:
+                - The *mean* tells you the average income.  
+                - The *min* and *max* show the lowest and highest salaries recorded.  
+            This helps compare ranges and understand overall data distribution.""")
+    else:
+        st.warning("No numeric columns available for summary statistics.")
+    
 
 # =============================================================
 # PAGE 2: INVESTMENT BEHAVIOR

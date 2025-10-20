@@ -130,6 +130,91 @@ Although **explicit encoding** (like one-hot encoding) isn’t performed yet, th
   - **Treemaps & stacked bars** → interactive pattern exploration.
 - Focus on **data quality**, ensuring no duplicates or invalid numeric types before visualization.
 
+## Data Analysis Coverage: Univariate, Bivariate, and Multivariate Insights
+
+### **Univariate Analysis**
+
+Univariate analysis focuses on **single variables**, helping identify distribution, central tendency, frequency, and data quality patterns.
+
+**Implemented in the Dashboard:**
+
+- **Overview → KPIs & Summary Stats**
+  - `st.metric` cards for **Average Salary** and **Average Expected Return** — indicators of central tendency.
+  - **Summary Statistics (Numeric Fields)** — mean, median, min, and max per numeric column.
+
+- **Overview → Most Popular Investment Type (Pie Chart)**
+  - Frequency of a single categorical variable (top rank-1 or fallback column).
+
+- **Interactive Data Explorer → Finance Tab**
+  - **Investment Type Distribution (Pie)** — frequency of one categorical variable.  
+  - **Monitoring Frequency (Bar)** — count of monitoring frequency categories.  
+  - **Missing Values — Finance (Table/Bar/Heatmap)** — column-wise missingness visualization.
+
+- **Interactive Data Explorer → Salary Tab**
+  - **Salary Distribution by Experience Band (Histogram)** — univariate salary distribution (color = secondary dimension).  
+  - **Missing Values — Salary** — identical data-quality visualization style.
+
+- **Demographics & Behavioral Patterns**
+  - **Gender Ratio (Pie)** — categorical frequency for gender.  
+  - **Age Group Distribution (Bar)** — categorical frequency for age group.
+
+---
+
+### **Bivariate Analysis**
+
+Bivariate analysis explores **relationships between two variables**, such as numeric-vs-numeric or numeric-vs-categorical patterns.
+
+**Implemented in the Dashboard:**
+
+- **Overview**
+  - **Average Salary by Education Level (Bar)** — numeric vs categorical.
+
+- **Investment Behavior (Page 2)**
+  - **Risk Appetite by Age Group (Stacked Bar)** — derived risk band vs age group.  
+  - **Tenure Preference by Age Group (Grouped Bar)** — categorical vs categorical.  
+  - **Monitoring Frequency by Gender (Line)** — two categoricals across ordered frequency.  
+  - **Expected Return (%) by Education Level (Violin + Box)** — numeric vs categorical.
+
+- **Salary & Education Insights (Page 3)**
+  - **Salary Distribution by Experience Band (Histogram + Color)** — salary vs band.  
+  - **Average Salary by Education (Bar)** — numeric vs categorical.  
+  - **Salary by Age Group (Box)** — numeric vs categorical.  
+  - **Salary vs Years of Experience (Scatter + Trendline)** — numeric vs numeric.
+
+- **Relationship Between Income & Investment (Page 4)**
+  - **Salary vs Expected Return (%) (Scatter + Trendline)** — numeric vs numeric.  
+  - **Education Level vs Most-Preferred Investment (Grouped Bar)** — two categoricals.
+
+- **Demographics & Behavioral Patterns (Page 5)**
+  - **Education Level by Gender (Stacked Bar)** — categorical vs categorical.
+
+---
+
+### **Multivariate Analysis**
+
+Multivariate analysis examines **three or more variables** to reveal deeper, high-dimensional interactions.
+
+**Implemented in the Dashboard:**
+
+- **Correlation Heatmaps (Overview, Page 3, Page 4)**  
+  Visualizes pairwise correlations across numeric variables (Age, Salary, Experience, Expected Return).
+
+- **Bubble Chart (Page 4)**  
+  **Experience vs Salary** with bubble size and color representing **Expected Return (%)** — three variables simultaneously.
+
+- **Treemap (Page 5)**  
+  Hierarchical visualization: **Age → Education → Goal**, showing layered categorical relationships.
+
+---
+
+### **Summary Table**
+
+| **Analysis Type** | **Example Visuals** | **Key Concepts** |
+|--------------------|---------------------|------------------|
+| **Univariate** | KPI Cards, Pie Charts, Histograms, Summary Tables | Frequency · Spread · Central Tendency |
+| **Bivariate** | Bar, Line, Violin, Scatter, Box | Correlation · Categorical Comparison · Trendlines |
+| **Multivariate** | Heatmaps, Bubble, Treemap | Inter-Variable Relationships · Multi-Dimensional Analysis |
+
 ---
 
 ## 12. Sampling, Data Imbalance, and Missingness

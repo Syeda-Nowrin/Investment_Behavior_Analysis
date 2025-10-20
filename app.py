@@ -227,7 +227,7 @@ st.markdown("""
   border: 1px solid rgba(91,192,190,.35);
   border-radius: 10px;
   padding: 8px 10px;
-  background: #ffffff;              /* default (matches your theme) */
+  background: #ffffff;              
   color: #e0e0e0;
   transition: background .15s ease, transform .15s ease, border-color .15s ease;
 }
@@ -243,7 +243,7 @@ st.markdown("""
 [data-testid="stSidebar"] [data-testid="stRadio"] label[aria-checked="true"],
 /* Fallback selector (older Streamlit builds) */
 [data-testid="stSidebar"] [data-testid="stRadio"] div[aria-checked="true"] label {
-  background: #5bc0be !important;   /* your accent color */
+  background: #5bc0be !important;   
   border-color: #5bc0be !important;
   color: #ffffff !important;
   box-shadow: 0 6px 16px rgba(91,192,190,.35);
@@ -509,9 +509,9 @@ if page == "Overview Dashboard":
         
         st.markdown("""
             ### Understanding the Correlation Heatmap
-                This chart shows how different numerical factors are connected in your dataset — like Age, Experience, Salary, and Expected Return.
+                This chart shows how different numerical factors are connected in the dataset — like Age, Experience, Salary, and Expected Return.
 
-                Each square compares two factors and tells you how strongly they move together:
+                Each square compares two factors and tells how strongly they move together:
                     - Dark Blue → Strong positive relationship (when one increases, the other also increases)
                     - Light Blue / White → Weak or no relationship
                     - Very Light / Opposite Shades → Negative relationship (when one increases, the other decreases)

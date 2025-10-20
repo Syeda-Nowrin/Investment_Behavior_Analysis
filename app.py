@@ -59,6 +59,7 @@ h3, h4 { margin-top: .25rem; }
 # 2. LOAD DATASETS
 # -------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
 FIN_PATH = BASE_DIR / "Finance_Dataset_Cleaned.csv"
 SAL_PATH = BASE_DIR / "Salary_Dataset_Cleaned.csv"
 

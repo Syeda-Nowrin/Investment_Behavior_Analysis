@@ -1,11 +1,11 @@
-# Investment & Salary EDA Dashboard (Streamlit + Plotly)
+# Investment & Salary Dashboard
 
 An interactive Streamlit app for exploring **investment behavior** and **salary/education** patterns side-by-side.  
 It reads two cleaned CSVs — `Finance_Dataset_Cleaned.csv` and `Salary_Dataset_Cleaned.csv` — and provides guided tabs, filters, and beautiful visuals (Plotly) to help you discover insights quickly.
 
 ---
 
-## ✨ Features
+## Features
 
 - **Left-hand navigation** with active highlight (radio-based)  
 - **Global filters** (Gender, Age Group, Education, Experience Band) that update all pages  
@@ -24,7 +24,7 @@ It reads two cleaned CSVs — `Finance_Dataset_Cleaned.csv` and `Salary_Dataset_
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 .
@@ -45,7 +45,7 @@ It reads two cleaned CSVs — `Finance_Dataset_Cleaned.csv` and `Salary_Dataset_
 
 ---
 
-## 🔧 Requirements
+## Requirements
 
 - Python **3.9+** (3.10/3.11 OK)
 - See `requirements.txt` for exact versions:
@@ -66,7 +66,7 @@ pip install streamlit pandas numpy plotly
 
 ---
 
-## 🚀 Run Locally
+## Run Locally
 
 From the project folder (where `app.py` lives):
 
@@ -80,7 +80,7 @@ Then open the URL Streamlit prints (usually http://localhost:8501).
 
 ---
 
-## 📊 Data Expectations
+## Data Expectations
 
 - **Finance_Dataset_Cleaned.csv**  
   Typical columns (names are auto-detected and case-insensitive):
@@ -102,7 +102,7 @@ Then open the URL Streamlit prints (usually http://localhost:8501).
 
 ---
 
-## 🧭 Navigation & Filters
+## Navigation & Filters
 
 The **left sidebar** contains:
 - **Navigation** (radio) — the selected page is **highlighted**.
@@ -111,7 +111,7 @@ The **left sidebar** contains:
 
 ---
 
-## 🧠 Notes & Troubleshooting
+## Notes & Troubleshooting
 
 - If a chart says “not enough data,” broaden filters or check that your CSV column names contain the expected keywords (e.g., “expected return”, “monitor”, “education”).  
 - For the “rank” logic, ensure your columns literally match the pattern:  
@@ -121,7 +121,7 @@ The **left sidebar** contains:
 
 ---
 
-## 📦 Deploying
+## Deploying
 
 - **Streamlit Community Cloud**: Push to GitHub and deploy; make sure both CSVs are in the repo or fetched at runtime.  
 - **Docker** (optional quick example):
@@ -136,13 +136,13 @@ The **left sidebar** contains:
 
 ---
 
-## 📝 License
+## License
 
-MIT (or your preferred license).
+MIT.
 
 ---
 
-## 🙌 Acknowledgements
+## Acknowledgements
 
 Built with ♥ using **Streamlit** and **Plotly**.  
 Data cleaning assumptions and label parsing are designed to be robust to “real-world” messy survey data.

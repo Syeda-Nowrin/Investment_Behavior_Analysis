@@ -5,7 +5,7 @@ This project demonstrates a full **data preprocessing pipeline** — from raw su
 
 ---
 
-## 🧹 1. Data Cleaning & Preparation
+## 1. Data Cleaning & Preparation
 
 **Techniques used:**
 - **Whitespace trimming:**  
@@ -21,7 +21,7 @@ This project demonstrates a full **data preprocessing pipeline** — from raw su
 
 ---
 
-## 🔢 2. Data Type Conversion & Parsing
+## 2. Data Type Conversion & Parsing
 
 **Techniques used:**
 - **Type coercion:**  
@@ -32,12 +32,9 @@ This project demonstrates a full **data preprocessing pipeline** — from raw su
 - **String transformations:**  
   Replacing curly apostrophes and backticks with standard `'` for consistency.
 
-**Course topics covered:**  
-→ *Type conversion, string parsing, regular expressions, feature extraction, data normalization.*
-
 ---
 
-## 🧠 3. Feature Engineering
+## 3. Feature Engineering
 
 **Techniques used:**
 - **Derived categorical features:**  
@@ -47,12 +44,9 @@ This project demonstrates a full **data preprocessing pipeline** — from raw su
 - **Adding interpretable categorical ranges:**  
   Enables more meaningful grouping and visualization.
 
-**Course topics covered:**  
-→ *Feature creation, binning/discretization, domain-based transformations, interpretability.*
-
 ---
 
-## 🧩 4. Missing Value Handling (Imputation)
+## 4. Missing Value Handling (Imputation)
 
 **Techniques used:**
 - **Numeric imputation using median:**  
@@ -60,12 +54,9 @@ This project demonstrates a full **data preprocessing pipeline** — from raw su
 - **Categorical imputation with constants:**  
   Replacing text missing values with `"Unknown"` to retain all records for analysis.
 
-**Course topics covered:**  
-→ *Imputation (mean/median/mode), handling missing data, maintaining data completeness.*
-
 ---
 
-## ⚙️ 5. Data Transformation & Normalization
+## 5. Data Transformation & Normalization
 
 **Techniques used:**
 - **Category normalization:**  
@@ -75,23 +66,17 @@ This project demonstrates a full **data preprocessing pipeline** — from raw su
 - **Feature renaming for clarity:**  
   Making complex headers concise (e.g., preference rankings renamed to human-readable names).
 
-**Course topics covered:**  
-→ *Feature transformation, manual label encoding preparation, data normalization.*
-
 ---
 
-## 🧮 6. Encoding & Representation Concepts
+## 6. Encoding & Representation Concepts
 
 Although **explicit encoding** (like one-hot encoding) isn’t performed yet, the cleaning steps prepare categorical fields for it by:
 - Converting free-text categories into **finite, uniform sets** (e.g., `Education Level`, `Age Group`).
 - Creating categorical bands (`Experience Band`) that are **ready for encoding** in ML pipelines.
 
-**Course topics covered:**  
-→ *Categorical encoding, data representation, preprocessing for ML.*
-
 ---
 
-## 📊 7. Scaling & Numeric Readiness
+## 7. Scaling & Numeric Readiness
 
 **Techniques used:**
 - Cleaning prepares numeric fields (**Age**, **Salary**, **Years of Experience**) for downstream scaling.
@@ -101,36 +86,27 @@ Although **explicit encoding** (like one-hot encoding) isn’t performed yet, th
 - **Z-score scaling** (StandardScaler)  
 - **Min-Max normalization**
 
-**Course topics covered:**  
-→ *Scaling concepts, preparing numeric features, standardization, normalization.*
-
 ---
 
-## 🧪 8. Data Validation & Quality Assurance
+## 8. Data Validation & Quality Assurance
 
 **Techniques used:**
 - Printing dataset **shape and column summaries** for validation.  
 - Checking column existence (`if col in df.columns:`) before applying transformations.  
 - Safe defaults for coercion (`errors='coerce'`), fallback to `"Unknown"` for resilience.
 
-**Course topics covered:**  
-→ *Data validation, error handling, quality control, reproducible pipelines.*
-
 ---
 
-## 🧱 9. Data Export & Reproducibility
+## 9. Data Export & Reproducibility
 
 **Techniques used:**
 - Exporting standardized outputs with consistent schema (`*_Cleaned.csv`).  
 - Organized directory management using `Pathlib`.  
 - Dropping duplicates and saving deterministic files for repeatable results.
 
-**Course topics covered:**  
-→ *Reproducibility, ETL pipelines, workflow automation, file management.*
-
 ---
 
-## 💡 10. Broader Concepts Applied
+## 10. Broader Concepts Applied
 
 | **Concept** | **Example from Project** |
 |--------------|---------------------------|
@@ -143,7 +119,7 @@ Although **explicit encoding** (like one-hot encoding) isn’t performed yet, th
 
 ---
 
-## 📈 11. Data Quality, Processing, and Visualization (EDA & IDA)
+## 11. Data Quality, Processing, and Visualization (EDA & IDA)
 
 **Where applied:**
 - After cleaning, data were **ready for Exploratory Data Analysis (EDA)** and **Initial Data Analysis (IDA)** inside the Streamlit dashboard.
@@ -154,12 +130,9 @@ Although **explicit encoding** (like one-hot encoding) isn’t performed yet, th
   - **Treemaps & stacked bars** → interactive pattern exploration.
 - Focus on **data quality**, ensuring no duplicates or invalid numeric types before visualization.
 
-**Course topics covered:**  
-→ *EDA, data profiling, summary statistics, feature correlation, pattern identification.*
-
 ---
 
-## ⚖️ 12. Sampling, Data Imbalance, and Missingness
+## 12. Sampling, Data Imbalance, and Missingness
 
 **Where applied:**
 - **Balanced analysis preparation:**  
@@ -169,12 +142,9 @@ Although **explicit encoding** (like one-hot encoding) isn’t performed yet, th
 - **Sampling readiness:**  
   Data now suitable for stratified sampling or train-test splits in future modeling.
 
-**Course topics covered:**  
-→ *Sampling, imbalance correction, missing value treatment, bias reduction.*
-
 ---
 
-## 🧾 Summary of Concepts Applied
+## Summary of Concepts Applied
 
 | **Category** | **Techniques Used** |
 |---------------|--------------------|

@@ -35,7 +35,7 @@ It reads two cleaned CSVs — `Finance_Dataset_Cleaned.csv` and `Salary_Dataset_
 └── requirements.txt
 ```
 
-> If your CSVs live elsewhere, update the paths at the top of `app.py`:
+> If CSVs live elsewhere, update the paths at the top of `app.py`:
 >
 > ```python
 > BASE_DIR = Path(__file__).resolve().parent

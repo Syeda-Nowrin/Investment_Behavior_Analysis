@@ -2039,7 +2039,7 @@ elif page == "Insights & Storytelling":
     # Summary Narrative
     # -------------------------------
     st.markdown("""
-    ### Overall Story
+    ## Overall Story:
     As individuals mature in age, experience, and education, their **investment mindset evolves** 
     from **aggressive to balanced** — emphasizing **security and long-term growth** over quick gains.  
     Gender, salary, and education together shape financial confidence, awareness, and diversification.  

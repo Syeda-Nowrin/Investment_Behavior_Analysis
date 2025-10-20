@@ -19,9 +19,6 @@ This project demonstrates a full **data preprocessing pipeline** — from raw su
 - **Dealing with inconsistent capitalization:**  
   Using `.str.title()` to make text values uniform.
 
-**Course topics covered:**  
-→ *Data wrangling, preprocessing, cleaning operations, feature name standardization, data quality improvement.*
-
 ---
 
 ## 🔢 2. Data Type Conversion & Parsing

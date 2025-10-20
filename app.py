@@ -3,7 +3,7 @@
 # Investment & Salary EDA Dashboard (Plotly-only, robust to messy data)
 # + Seven Streamlit Tabs for guided exploration & storytelling
 # -------------------------------------------------------------------
-# Fixes included (from your version + extras):
+# Included:
 #   • Fallback finder for Expected Return (prevents empty finance table)
 #   • Popular Investment Options: auto-detects any "Preference rank for ... investment"
 #   • Goals: split on comma/semicolon/pipe/slash
@@ -534,7 +534,7 @@ if page == "Overview Dashboard":
                 | Experience & Expected Return | More experience = realistic goals | Weak–Negative |
                 | Salary & Expected Return | Higher salary = safer investment choices | Weak–Negative |
 
-            > This heatmap helps you understand how professional growth, age, and income patterns connect to financial expectations.""")
+            > This heatmap helps to understand how professional growth, age, and income patterns connect to financial expectations.""")
     else:
         st.info("Not enough informative numeric columns to render a heatmap under current filters.")
 
@@ -551,15 +551,16 @@ if page == "Overview Dashboard":
         desc["median"] = numeric_cols.median()
         st.dataframe(desc[["mean", "median", "min", "max"]].round(2))
         st.markdown("""
-                This table summarizes important numerical data. It shows:  
-                    - **Mean:** The average value  
-                    - **Median:** The middle value  
-                    - **Min/Max:** The smallest and largest numbers
+            **How to read this Finance summary**
 
-            For example, in salary data:
-                - The *mean* tells you the average income.  
-                - The *min* and *max* show the lowest and highest salaries recorded.  
-            This helps compare ranges and understand overall data distribution.""")
+            - **Mean / Median** describe the *typical respondent* across **investment-survey numerics** such as
+            **Expected Return (%)**, **Age**, or any numeric **ratings/frequencies** that exist in the finance file.
+            - **Min / Max** show the observed range in the *current filtered view* (e.g., lowest and highest **expected return** targets).
+
+            **Why it matters for Finance**
+            - A **higher mean than median** on *Expected Return (%)* suggests a few aggressive targets pulling the average up
+            → skewed risk appetite.
+            - If a **monitoring cadence** numeric field exists (e.g., times/month), its spread hints at how diligently investors track portfolios.""")
     else:
         st.warning("No numeric columns available for summary statistics.")
 
@@ -575,18 +576,54 @@ if page == "Overview Dashboard":
         desc["median"] = numeric_cols.median()
         st.dataframe(desc[["mean", "median", "min", "max"]].round(2))
         st.markdown("""
-                This table summarizes important numerical data. It shows:  
-                    - **Mean:** The average value  
-                    - **Median:** The middle value  
-                    - **Min/Max:** The smallest and largest numbers
+            **How to read this Salary summary**
 
-            For example, in salary data:
-                - The *mean* tells you the average income.  
-                - The *min* and *max* show the lowest and highest salaries recorded.  
-            This helps compare ranges and understand overall data distribution.""")
+            - **Mean / Median Salary** capture central tendency of compensation in the sample; 
+            big gaps between them signal **outliers or heavy skew** in pay.
+            - If present, **Years of Experience** and **Age** numerics reveal the **seniority mix** 
+            (e.g., broader ranges → mixed junior/senior population).
+            - **Min / Max Salary** outline the **pay band** represented by the survey after filters.
+
+            **Why it matters for Salary**
+            - Compare these numbers with charts like **Average Salary by Education** and **Salary vs Experience** 
+            to confirm trends to see visually.
+            - Use the range to spot **data-quality issues** (e.g., zeros or implausibly large salaries) that may need cleaning.""")
+
     else:
         st.warning("No numeric columns available for summary statistics.")
-    
+      # -----------------------------
+    # Dataset Schema / Dtypes — Finance & Salary
+    # (Place right after the Salary summary stats section)
+    # -----------------------------
+    st.divider()
+    st.subheader("Dataset Types — Finance & Salary")
+
+    colA, colB = st.columns(2)
+
+    with colA:
+        st.markdown("**Finance Dataset:**")
+        fin_types = (
+            pd.DataFrame({
+                "Column": finance.columns,
+                "Type": finance.dtypes.astype(str).values
+            })
+            .sort_values("Column")
+            .reset_index(drop=True)
+        )
+        st.dataframe(fin_types, use_container_width=True)
+
+    with colB:
+        st.markdown("**Salary Dataset:**")
+        sal_types = (
+            pd.DataFrame({
+                "Column": salary.columns,
+                "Type": salary.dtypes.astype(str).values
+            })
+            .sort_values("Column")
+            .reset_index(drop=True)
+        )
+        st.dataframe(sal_types, use_container_width=True)
+  
 
 # =============================================================
 # PAGE 2: INVESTMENT BEHAVIOR
@@ -787,7 +824,7 @@ elif page == "Investment Behavior":
     st.divider()
 
     # ---------------------------
-    # Insights (answers your 3 questions)
+    # Insights
     # ---------------------------
     with st.container(border=True):
         st.markdown("#### Insights Summary")
@@ -1061,7 +1098,7 @@ elif page == "Salary & Education Insights":
     st.divider()
 
     # ---------------------------
-    # Insights — answers the 3 questions
+    # Insights
     # ---------------------------
     with st.container(border=True):
         st.markdown("#### Insights Summary")
@@ -1075,7 +1112,7 @@ elif page == "Salary & Education Insights":
             if not edu_tmp.empty:
                 means = edu_tmp.groupby(col_edu)[col_salary].mean().sort_values(ascending=False)
                 if not means.empty:
-                    bullets.append(f"- 🎓 **Education → Salary:** Highest average salary for **{means.index[0]}** (~{means.iloc[0]:,.0f}).")
+                    bullets.append(f"- **Education → Salary:** Highest average salary for **{means.index[0]}** (~{means.iloc[0]:,.0f}).")
 
         # 2) Which age groups earn the most?
         if col_salary and (col_salary in ib_sal.columns) and ("__Age_Group" in ib_sal.columns):
@@ -1084,7 +1121,7 @@ elif page == "Salary & Education Insights":
             if not age_tmp.empty:
                 age_means = age_tmp.groupby("__Age_Group")[col_salary].mean().sort_values(ascending=False)
                 if not age_means.empty:
-                    bullets.append(f"- 👥 **Top-earning age group:** **{age_means.index[0]}** (avg ~{age_means.iloc[0]:,.0f}).")
+                    bullets.append(f"- **Top-earning age group:** **{age_means.index[0]}** (avg ~{age_means.iloc[0]:,.0f}).")
 
         # 3) Salary trend with experience
         if col_salary and (col_salary in ib_sal.columns) and years_col and (years_col in ib_sal.columns):
@@ -1095,7 +1132,7 @@ elif page == "Salary & Education Insights":
                     slope = np.polyfit(trend_tmp["Years"], trend_tmp["Salary"], 1)[0]
                     if np.isfinite(slope):
                         direction = "rises" if slope > 0 else "falls"
-                        bullets.append(f"- 📈 **Experience trend:** Salary **{direction}** with experience (slope ≈ {slope:,.0f} per year).")
+                        bullets.append(f"- **Experience trend:** Salary **{direction}** with experience (slope ≈ {slope:,.0f} per year).")
                 except Exception:
                     pass
 
@@ -1173,7 +1210,7 @@ elif page == "Income & Investment Relationship":
             return pd.Series(np.nan, index=fin_df.index)
 
     # ---------------------------
-    # 1) Merge salary + finance views (using your globally-filtered f_fin/f_sal)
+    # 1) Merge salary + finance views
     # ---------------------------
     merge_cols_fin = {}
     if col_gender and (col_gender in f_fin.columns):  merge_cols_fin["Gender"] = f_fin[col_gender]
@@ -1802,11 +1839,11 @@ elif page == "Interactive Data Explorer":
 
         st.divider()
 
-        show_fin = st.toggle("Show Raw Finance Data", value=False, key="p6_show_fin")
+        show_fin = st.toggle("Show Finance Dataset", value=False, key="p6_show_fin")
         if show_fin:
             st.dataframe(fin_view, use_container_width=True)
         st.download_button(
-            "Download Filtered Finance Data",
+            "Download Finance Dataset",
             fin_view.to_csv(index=False).encode("utf-8"),
             "finance_filtered.csv",
             "text/csv",
@@ -1914,27 +1951,102 @@ elif page == "Interactive Data Explorer":
         st.divider()
 
         # ---------- Show raw data + download
-        show_sal = st.toggle("Show raw Salary data", value=False, key="p6_show_sal")
+        show_sal = st.toggle("Show Salary Dataset", value=False, key="p6_show_sal")
         if show_sal:
             st.dataframe(sal_view, use_container_width=True)
         st.download_button(
-            "Download Salary (filtered)", sal_view.to_csv(index=False).encode("utf-8"),
+            "Download Salary Dataset", sal_view.to_csv(index=False).encode("utf-8"),
             "salary_filtered.csv", "text/csv", key="p6_dl_sal"
         )
 
 
 # =============================================================
+# =============================================================
 # PAGE 7: INSIGHTS & STORYTELLING
 # =============================================================
 elif page == "Insights & Storytelling":
-    st.subheader("💡 Key Insights & Storytelling")
+    st.subheader("Key Insights & Storytelling")
 
+    # -------------------------------
+    # Context and Problem Definition
+    # -------------------------------
     st.markdown("""
-    - **Younger investors (<35)** prefer stocks and mutual funds, while **older participants** lean toward gold and fixed deposits.  
-    - **Higher education** correlates with **higher salaries and diversified portfolios**.  
-    - **Females** check investments less frequently than **males**, showing cautious behavior.  
-    - **Experienced professionals (5+ yrs)** prefer long-term, safer investment goals.  
+    ## Project Context:
+    Modern investors, especially young professionals face an overload of investment choices 
+    (stocks, mutual funds, gold, crypto, fixed deposits, etc.) without a clear understanding of how 
+    age, education, income, and experience influence financial decisions. The problem lies in misaligned investment behavior, people often invest based on trends or peer influence 
+    rather than aligning with their risk capacity, income level, and financial goals.  
+
+    This dashboard bridges that gap by analyzing behavioral finance patterns — linking demographic and salary data 
+    with investment preferences, risk appetite, and monitoring frequency.
     """)
+
+    # -------------------------------
+    # Why It Matters
+    # -------------------------------
+    st.markdown("""
+    ## Relevance & Impact:
+    Understanding behavioral patterns helps:
+    - **Financial educators and advisors** design better financial literacy programs.
+    - **Fintech startups and banks** personalize products (e.g., tailored mutual fund or insurance plans).
+    - **Researchers and policy makers** identify how income, gender, or education affect investment equity and inclusion.
+    
+    Ultimately, this analysis provides **data-driven insights** into how people think about money — 
+    a foundation for building smarter, more inclusive, and sustainable financial ecosystems.
+    """)
+
+    # -------------------------------
+    # Audience Definition
+    # -------------------------------
+    st.markdown("""
+    ## Intended Audience:
+    - **Young professionals and investors:** To self-assess financial decisions and compare with peer patterns.  
+    - **Financial advisors & planners:** To understand client psychology and risk tolerance.  
+    - **Fintech product teams:** To develop tools for goal-based investing and portfolio diversification.  
+    - **Researchers & educators:** To study socio-economic factors shaping financial behavior.
+    """)
+
+    # -------------------------------
+    # Behavioral & Analytical Insights
+    # -------------------------------
+    st.markdown("""
+    ## Key Behavioral Insights:
+
+    ** Age & Risk Appetite**
+    - **Younger investors (<35)** show **higher risk tolerance**, preferring **stocks and mutual funds**.
+    - **Older participants (45+)** lean toward **gold and fixed deposits** for safety and predictable returns.
+
+    ** Gender Patterns**
+    - **Females** check portfolios less frequently and favor **stable investments** — a more **long-term, cautious approach**.  
+    - **Males** tend to monitor investments more often and lean slightly toward **higher-risk instruments**.
+
+    ** Education & Experience**
+    - **Master’s degree holders** show **diversified portfolios** and **steady return expectations**.  
+    - **Professionals with 5+ years of experience** prefer **goal-based, low-volatility investments**.
+
+    ** Income & Return Expectations**
+    - **High-salary groups** expect **lower but stable returns**, prioritizing capital preservation.  
+    - **Lower-income respondents** expect **higher returns**, showing an aspirational or risk-seeking mindset.  
+    - There is a **negative correlation** between **salary** and **expected return %** — confirming a classic *risk–return tradeoff*.
+
+    ** Cross-Dataset Patterns**
+    - **Age ↔ Experience ↔ Salary:** Strong positive correlation — older respondents are more experienced and earn higher salaries.  
+    - **Salary ↔ Education ↔ Investment Diversity:** Higher-educated earners diversify across multiple assets.  
+    - **Expected Return ↔ Monitoring Frequency:** Higher return expectations often coincide with frequent portfolio tracking.
+    """)
+
+    # -------------------------------
+    # Summary Narrative
+    # -------------------------------
+    st.markdown("""
+    ### Overall Story
+    As individuals mature in age, experience, and education, their **investment mindset evolves** 
+    from **aggressive to balanced** — emphasizing **security and long-term growth** over quick gains.  
+    Gender, salary, and education together shape financial confidence, awareness, and diversification.  
+    This project provides a **data-driven foundation** for understanding *why people invest the way they do* 
+    — guiding future interventions in **financial literacy, policy, and personalized investment design**.
+    """)
+
 
 
 # =============================================================
@@ -2038,7 +2150,7 @@ FILTER_CAPTION_COLOR = "#313234" # Small helper text (optional)
 
 st.markdown(f"""
 <style>
-/* A) Main "Filter" header (you already use .filter-header) */
+/* A) Main "Filter" header (already use .filter-header) */
 [data-testid="stSidebar"] .filter-header {{
   color: {FILTER_TITLE_COLOR} !important;
 }}

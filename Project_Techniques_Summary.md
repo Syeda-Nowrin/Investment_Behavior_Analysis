@@ -130,7 +130,7 @@ Although **explicit encoding** (like one-hot encoding) isn’t performed yet, th
   - **Treemaps & stacked bars** → interactive pattern exploration.
 - Focus on **data quality**, ensuring no duplicates or invalid numeric types before visualization.
 
-Data Analysis Coverage: Univariate, Bivariate, and Multivariate Insights
+**Data Analysis Coverage: Univariate, Bivariate, and Multivariate Insights**
 
 ### **Univariate Analysis**
 

@@ -1691,7 +1691,6 @@ elif page == "Interactive Data Explorer":
     # ---------------------------
     # Tabs for Finance and Salary datasets
     # ---------------------------
-    
     tab_fin, tab_sal = st.tabs(["Finance", "Salary"])
 
     # ---------------------------
@@ -1748,33 +1747,175 @@ elif page == "Interactive Data Explorer":
     with tab_fin:
         st.markdown("### Finance Dataset")
 
-        #grid1a, grid1b, grid1c = st.columns([1, 1, 1])
-        grid1a, grid1c = st.columns([1, 1])
+         # --- styling for the step cards (green pill etc.) ---
+        st.markdown(
+            """
+            <style>
+            .step-card {
+                background: #050816;              /* dark navy */
+                border-radius: 12px;
+                padding: 12px 18px;
+                margin-bottom: 10px;
+                border: 1px solid rgba(34,197,94,0.45);  /* subtle green border */
+            }
+            .step-header {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 6px;
+            }
+            .step-pill {
+                display: inline-block;
+                padding: 2px 10px;
+                border-radius: 999px;
+                background: #22c55e;             /* green */
+                color: #052e16;                   /* very dark green text */
+                font-size: 0.75rem;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
+            .step-title {
+                font-weight: 700;
+                font-size: 0.95rem;
+            }
+            .step-body {
+                font-size: 0.9rem;
+                line-height: 1.4;
+            }
+            .step-body code {
+                background: #022c22;
+                color: #bbf7d0;
+                padding: 2px 4px;
+                border-radius: 4px;
+                font-size: 0.8rem;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+        # ---------------------------
+        # Data Cleaning Summary — Finance_Dataset_Cleaned.csv
+        # ---------------------------
+        with st.container(border=True):
+            st.markdown("#### Data Cleaning Summary — Finance Dataset")
+
+ # ---------- Step 1 ----------
+            st.markdown(
+                """
+                <div class="step-card">
+                  <div class="step-header">
+                    <span class="step-pill">Step 1</span>
+                    <span class="step-title">Standardized Column Names</span>
+                  </div>
+                  <div class="step-body">
+                    <ul>
+                      <li>Trimmed extra spaces from all column headers using <code>df.columns.str.strip()</code>.</li>
+                      <li>Renamed long survey-question columns that start with<br>
+                        <code>What do you think are the best options for investing your money?</code><br>
+                        into concise preference fields, for example:
+                        <ul>
+                          <li>
+                            <code>What do you think are the best options for investing your money? (Rank in order of preference) [Gold]</code>
+                            &nbsp;&rarr;&nbsp;<code>Preference rank for GOLD investment</code>
+                          </li>
+                          <li>
+                            <code>What do you think are the best options for investing your money? [Mutual Funds]</code>
+                            &nbsp;&rarr;&nbsp;<code>Preference for MUTUAL FUNDS investment</code>
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # ---------- Step 2 ----------
+            st.markdown(
+                """
+                <div class="step-card">
+                  <div class="step-header">
+                    <span class="step-pill">Step 2</span>
+                    <span class="step-title">Standardized Categorical Values &amp; Missing Data</span>
+                  </div>
+                  <div class="step-body">
+                    <ul>
+                      <li>Trimmed leading/trailing spaces in all text fields so <code>" Gold "</code> becomes <code>"Gold"</code>.</li>
+                      <li>Converted common numeric-like columns
+                        <code>AGE</code>, <code>EXPECTED_RETURN_PCT</code>, <code>AVG_SALARY</code>,
+                        <code>AVG_EXPERIENCE</code>, <code>MONITOR_FREQ_PER_MONTH</code>
+                        to numeric using <code>pd.to_numeric(..., errors="coerce")</code>.
+                      </li>
+                      <li>Handled missing values:
+                        <ul>
+                          <li>Numeric columns &rarr; filled with the median of that column.</li>
+                          <li>Text columns &rarr; replaced literal <code>"nan"</code> strings and
+                              filled missing entries with <code>"Unknown"</code>.
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # ---------- Step 3 ----------
+            st.markdown(
+                """
+                <div class="step-card">
+                  <div class="step-header">
+                    <span class="step-pill">Step 3</span>
+                    <span class="step-title">Derived Fields &amp; Duplicate Handling</span>
+                  </div>
+                  <div class="step-body">
+                    <ul>
+                      <li>
+                        Created an ordinal <code>Age_Group</code> variable from <code>AGE</code> when
+                        <code>Age_Group</code> was missing, with buckets:
+                        <code>18–24</code>, <code>25–34</code>, <code>35–44</code>, <code>45–54</code>, <code>55+</code>.
+                      </li>
+                      <li>Dropped exact duplicate rows so each respondent is counted only once.</li>
+                    </ul>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
         # ---------------------------
-        # 1️⃣ Investment Type Distribution (Pie)
+        # Main Finance Charts
         # ---------------------------
+        grid1a, grid1c = st.columns([1, 1])
+
+        # 1️⃣ Investment Type Distribution (Pie)
         with grid1a:
             inv_cols = [c for c in fin_view.columns if re.search(r"invest", c, flags=re.I)]
             inv_col = inv_cols[0] if inv_cols else None
 
             if inv_col and not fin_view.empty:
-                fig_inv = px.pie(fin_view, names=inv_col, title="Investment Type Distribution",
-                                 hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
+                fig_inv = px.pie(
+                    fin_view,
+                    names=inv_col,
+                    title="Investment Type Distribution",
+                    hole=0.4,
+                    color_discrete_sequence=px.colors.qualitative.Pastel,
+                )
                 fig_inv.update_layout(title_font_size=16)
                 st.plotly_chart(fig_inv, use_container_width=True)
-                st.caption("""
-                **What it shows:**  
-                - Breakdown of how respondents allocate their investments across different types (Stocks, Mutual Funds, etc.).  
-                - Helps identify diversification and risk preferences.
-                """)
+                st.caption(
+                    """
+**What it shows:**
+- Breakdown of how respondents allocate their investments across different types (Stocks, Mutual Funds, etc.).
+- Helps identify diversification and risk preferences.
+                    """
+                )
             else:
                 st.warning("⚠️ Investment type column not found in dataset.")
 
-
-        # ---------------------------
         # 3️⃣ Monitoring Frequency (Bar)
-        # ---------------------------
         with grid1c:
             mon_cols = [c for c in fin_view.columns if re.search(r"monitor|frequency", c, flags=re.I)]
             mon_col = mon_cols[0] if mon_cols else None
@@ -1784,23 +1925,28 @@ elif page == "Interactive Data Explorer":
                 if not mf.empty:
                     ct = mf.value_counts().reset_index()
                     ct.columns = ["Frequency", "Count"]
-                    fig_mon = px.bar(ct, x="Frequency", y="Count",
-                                     title="Portfolio Monitoring Frequency",
-                                     color="Frequency", color_discrete_sequence=px.colors.sequential.Blues)
+                    fig_mon = px.bar(
+                        ct,
+                        x="Frequency",
+                        y="Count",
+                        title="Portfolio Monitoring Frequency",
+                        color="Frequency",
+                        color_discrete_sequence=px.colors.sequential.Blues,
+                    )
                     fig_mon.update_layout(xaxis_title="Frequency", yaxis_title="Respondents")
                     st.plotly_chart(fig_mon, use_container_width=True)
-                    st.caption("""
-                    **What it shows:**  
-                    - Frequency of portfolio monitoring among investors.  
-                    - Indicates how financially engaged respondents are.  
-                    - Frequent monitoring may reflect higher involvement or anxiety around market changes.
-                    """)
+                    st.caption(
+                        """
+**What it shows:**
+- Frequency of portfolio monitoring among investors.
+- Indicates how financially engaged respondents are.
+- Frequent monitoring may reflect higher involvement or anxiety around market changes.
+                        """
+                    )
 
         st.divider()
 
-        # ---------------------------
-        # Missing Values Section
-        # ---------------------------
+        # ---------- Missing Values (Summary + Bar + Heatmap)
         st.markdown("### Missing Values — Finance")
         if not fin_view.empty:
             miss_fin = _missing_counts(fin_view)
@@ -1808,8 +1954,14 @@ elif page == "Interactive Data Explorer":
             st.dataframe(miss_fin)
 
             top_fin = miss_fin.head(20).reset_index().rename(columns={"index": "Column"})
-            fig_mbar = px.bar(top_fin, x="Column", y="MissingPct", title="Top 20 Missing Columns (%)",
-                              color="MissingPct", color_continuous_scale="Teal")
+            fig_mbar = px.bar(
+                top_fin,
+                x="Column",
+                y="MissingPct",
+                title="Top 20 Missing Columns (%)",
+                color="MissingPct",
+                color_continuous_scale="Teal",
+            )
             fig_mbar.update_layout(xaxis_tickangle=45)
             st.plotly_chart(fig_mbar, use_container_width=True)
 
@@ -1827,15 +1979,19 @@ elif page == "Interactive Data Explorer":
                     color_continuous_scale="Blues",
                     aspect="auto",
                     title="Missingness Heatmap (1=Missing, 0=Present)",
-                    labels=dict(x="Respondents", y="Columns", color="Missingness")
+                    labels=dict(x="Respondents", y="Columns", color="Missingness"),
                 )
-                fig_hm.update_traces(hovertemplate="Column: %{y}<br>Respondent Index: %{x}<br>Missing: %{z}<extra></extra>")
+                fig_hm.update_traces(
+                    hovertemplate="Column: %{y}<br>Respondent Index: %{x}<br>Missing: %{z}<extra></extra>"
+                )
                 st.plotly_chart(fig_hm, use_container_width=True)
-            st.caption("""
-            **How to read:**  
-            - Each cell shows if a respondent’s value is missing (1) or present (0).  
-            - Taller regions of blue suggest specific columns have more data quality issues.
-            """)
+            st.caption(
+                """
+**How to read:**
+- Each cell shows if a respondent’s value is missing (1) or present (0).
+- Taller regions of blue suggest specific columns have more data quality issues.
+                """
+            )
 
         st.divider()
 
@@ -1847,15 +2003,119 @@ elif page == "Interactive Data Explorer":
             fin_view.to_csv(index=False).encode("utf-8"),
             "finance_filtered.csv",
             "text/csv",
-            key="p6_dl_fin"
+            key="p6_dl_fin",
         )
 
     # ---------------------------
+    # SALARY TAB  (unchanged logic)
+    # ---------------------------
+    with tab_sal:
+        st.markdown("#### Salary Dataset")
+
+
+            # ---------------------------
     # SALARY TAB
     # ---------------------------
     with tab_sal:
         st.markdown("#### Salary Dataset")
 
+        # ---------------------------
+        # Data Cleaning Summary — Salary_Dataset_Cleaned.csv
+        # (reuses the same .step-card CSS defined earlier)
+        # ---------------------------
+        with st.container(border=True):
+            st.markdown("#### Data Cleaning Summary — Salary Dataset")
+
+            # ---- Step 1 ----
+            st.markdown(
+                """
+                <div class="step-card">
+                  <div class="step-header">
+                    <span class="step-pill">Step 1</span>
+                    <span class="step-title">Standardized Column Names &amp; Text Fields</span>
+                  </div>
+                  <div class="step-body">
+                    <ul>
+                      <li>Trimmed spaces from all column headers using <code>df.columns.str.strip()</code>.</li>
+                      <li>Trimmed whitespace inside all text cells so values like <code>"  Manager  "</code> become <code>"Manager"</code>.</li>
+                      <li>Normalized key categorical fields to <strong>Title Case</strong> for consistency:
+                        <code>Gender</code>, <code>Education Level</code>, and <code>Job Title</code>.
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # ---- Step 2 ----
+            st.markdown(
+                """
+                <div class="step-card">
+                  <div class="step-header">
+                    <span class="step-pill">Step 2</span>
+                    <span class="step-title">Numeric Conversion &amp; Missing Values</span>
+                  </div>
+                  <div class="step-body">
+                    <ul>
+                      <li>Converted numeric-like columns to numeric using
+                        <code>pd.to_numeric(..., errors="coerce")</code>:
+                        <code>Age</code>, <code>Years of Experience</code> / <code>Years Of Experience</code>,
+                        and <code>Salary</code>.
+                      </li>
+                      <li>Unified the header variant <code>"Years Of Experience"</code> into
+                        <code>"Years of Experience"</code> so downstream logic uses a single column name.</li>
+                      <li>Handled missing values:
+                        <ul>
+                          <li><strong>Numeric columns</strong> &rarr; filled NaNs with the column median.</li>
+                          <li><strong>Text columns</strong> &rarr; cleaned literal <code>"nan"</code> strings
+                              and filled remaining missing entries with <code>"Unknown"</code>.
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # ---- Step 3 ----
+            st.markdown(
+                """
+                <div class="step-card">
+                  <div class="step-header">
+                    <span class="step-pill">Step 3</span>
+                    <span class="step-title">Derived Fields, Education Buckets &amp; Duplicates</span>
+                  </div>
+                  <div class="step-body">
+                    <ul>
+                      <li>Created an ordinal <code>Age Group</code> field from <code>Age</code> with buckets:
+                        <code>18-24</code>, <code>25-34</code>, <code>35-44</code>, <code>45-54</code>, <code>55+</code>.
+                      </li>
+                      <li>Created an <code>Experience Band</code> field from
+                        <code>Years of Experience</code> with buckets:
+                        <code>0-1 yrs</code>, <code>2-4 yrs</code>, <code>5-9 yrs</code>,
+                        <code>10-14 yrs</code>, <code>15-19 yrs</code>, <code>20+ yrs</code>.
+                      </li>
+                      <li>Standardized <code>Education Level</code> into clean buckets:
+                        <ul>
+                          <li><code>Master'S</code> / <code>Master'S Degree</code> &rarr; <code>Master's</code></li>
+                          <li><code>Bachelor'S</code> / <code>Bachelor'S Degree</code> &rarr; <code>Bachelor's</code></li>
+                          <li>Fixed any leftover <code>'S</code> casing to <code>'s</code> for consistency.</li>
+                        </ul>
+                      </li>
+                      <li>Removed exact duplicate rows so each salary record is counted only once.</li>
+                    </ul>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # ---------------------------
+        # Existing Salary charts & logic
+        # ---------------------------
         grid2a, grid2b, grid2c = st.columns([1, 1, 1])
 
         # 1) Salary Distribution by Experience Band (Histogram)
@@ -1884,19 +2144,19 @@ elif page == "Interactive Data Explorer":
 
         # 3) Salary vs Years of Experience (Scatter with trendline)
         with grid2c:
-            # Prefer numeric Years of Experience; otherwise try to derive midpoint from Experience Band
             years_col = None
             if col_expyrs and (col_expyrs in sal_view.columns):
                 years_col = col_expyrs
             elif col_expband and (col_expband in sal_view.columns):
-                # quick midpoint converter
                 def _mid_from_band(txt):
-                    if pd.isna(txt): return np.nan
+                    if pd.isna(txt):
+                        return np.nan
                     t = str(txt).lower().strip()
                     m = re.match(r"(\d+)\s*\+\s*", t)
-                    if m: return float(m.group(1)) + 2
+                    if m:
+                        return float(m.group(1)) + 2
                     m = re.match(r"(\d+)\s*[-–]\s*(\d+)", t)
-                    if m: 
+                    if m:
                         a, b = float(m.group(1)), float(m.group(2))
                         return (a + b) / 2.0
                     if "less" in t and "1" in t:
@@ -1921,21 +2181,19 @@ elif page == "Interactive Data Explorer":
 
         st.divider()
 
-        # ---------- Missing Values (Summary + Bar + Heatmap)
+        # Missing values — Salary
         st.markdown("#### Missing Values — Salary")
         if not sal_view.empty:
             miss_sal = _missing_counts(sal_view)
             st.markdown("**Summary Table** — counts/pct of missing values (including literal 'Unknown'/'Nan').")
             st.dataframe(miss_sal)
 
-            # Bar chart — top 20 missing columns
             top_sal = miss_sal.head(20).reset_index().rename(columns={"index": "Column"})
             fig_mbar2 = px.bar(top_sal, x="Column", y="MissingPct", title="Missing Values (Top 20 columns)",
                                labels={"MissingPct": "% Missing"})
             fig_mbar2.update_layout(xaxis_tickangle=45)
             st.plotly_chart(fig_mbar2, use_container_width=True)
 
-            # Heatmap — missingness matrix (limit for readability)
             show_cols2 = sal_view.columns[:30]
             heat_mask2 = sal_view[show_cols2].isna().copy()
             for c in show_cols2:
@@ -1950,13 +2208,15 @@ elif page == "Interactive Data Explorer":
 
         st.divider()
 
-        # ---------- Show raw data + download
         show_sal = st.toggle("Show Salary Dataset", value=False, key="p6_show_sal")
         if show_sal:
             st.dataframe(sal_view, use_container_width=True)
         st.download_button(
-            "Download Salary Dataset", sal_view.to_csv(index=False).encode("utf-8"),
-            "salary_filtered.csv", "text/csv", key="p6_dl_sal"
+            "Download Salary Dataset",
+            sal_view.to_csv(index=False).encode("utf-8"),
+            "salary_filtered.csv",
+            "text/csv",
+            key="p6_dl_sal",
         )
 
 

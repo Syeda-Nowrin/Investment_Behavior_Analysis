@@ -26,6 +26,15 @@ import re
 
 from pathlib import Path
 
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 # -------------------------------------------------------------
 # 1. APP CONFIGURATION
@@ -59,20 +68,29 @@ h3, h4 { margin-top: .25rem; }
 # 2. LOAD DATASETS
 # -------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
-#DATA_DIR = BASE_DIR / "data"
-FIN_PATH = BASE_DIR / "Finance_Dataset_Cleaned.csv"
-SAL_PATH = BASE_DIR / "Salary_Dataset_Cleaned.csv"
+
+FIN_PATH    = BASE_DIR / "Finance_Dataset_Cleaned.csv"
+SAL_PATH    = BASE_DIR / "Salary_Dataset_Cleaned.csv"
+TRENDS_PATH = BASE_DIR / "Finance_Trends_Cleaned.csv" 
+
 
 @st.cache_data
-def load_data(fin_path, sal_path):
-    """Load finance and salary datasets and clean column names."""
+def load_data(fin_path, sal_path, trends_path):
+    """Load finance, salary and trends datasets and do base cleanup."""
     finance = pd.read_csv(fin_path)
-    salary = pd.read_csv(sal_path)
-    finance.columns = finance.columns.str.strip()
-    salary.columns = salary.columns.str.strip()
-    return finance, salary
+    salary  = pd.read_csv(sal_path)
+    trends  = pd.read_csv(trends_path)
 
-finance, salary = load_data(FIN_PATH, SAL_PATH)
+    # --- strip column names ---
+    finance.columns = finance.columns.str.strip()
+    salary.columns  = salary.columns.str.strip()
+    trends.columns  = trends.columns.str.strip()
+
+    return finance, salary, trends
+
+
+finance, salary, trends = load_data(FIN_PATH, SAL_PATH, TRENDS_PATH)
+
 
 # -------------------------------------------------------------
 # 3. HELPER FUNCTIONS
@@ -311,6 +329,8 @@ st.sidebar.markdown(
 # Navigation items
 nav_items = {
     "Overview Dashboard": "",
+    "Integrated Respondent View": "",
+    "Modeling & Prediction": "",
     "Investment Behavior": "",
     "Salary & Education Insights": "",
     "Income & Investment Relationship": "",
@@ -624,6 +644,814 @@ if page == "Overview Dashboard":
         )
         st.dataframe(sal_types, use_container_width=True)
   
+# =============================================================
+# PAGE 8: INTEGRATED RESPONDENT VIEW (Finance + Salary + Trends)
+# =============================================================
+elif page == "Integrated Respondent View":
+    st.subheader("Integrated Respondent View (Finance + Salary + Trends)")
+
+    # ---------------------------------------------------------
+    # 0. Apply GLOBAL FILTERS to the Trends dataset as well
+    #     (Gender + Age Group + Education where possible)
+    # ---------------------------------------------------------
+
+    # trends_raw = original trends; we start from a copy
+    tr_base = trends.copy()
+
+    # Derive Age_Group for trends using the same logic as finance
+    # (reuses your global to_age_group(x) helper defined at top)
+    if "age" in tr_base.columns:
+        tr_base["Age_Group_tr"] = tr_base["age"].apply(to_age_group)
+
+    # Apply global gender filter (sel_gender) if matching column exists
+    if col_gender and sel_gender and "gender" in tr_base.columns:
+        tr_base = tr_base[tr_base["gender"].isin(sel_gender)]
+
+    # Apply global age-group filter (sel_age) if we derived Age_Group_tr
+    if sel_age and "Age_Group_tr" in tr_base.columns:
+        tr_base = tr_base[tr_base["Age_Group_tr"].isin(sel_age)]
+
+    # Apply global education filter if a suitable column exists in trends
+    # (Trends may not have education; this is safe anyway)
+    if col_edu and sel_edu:
+        # Try some common education-like column names
+        edu_candidates = [c for c in tr_base.columns if "edu" in c.lower() or "education" in c.lower()]
+        if edu_candidates:
+            edu_col_tr = edu_candidates[0]
+            tr_base = tr_base[tr_base[edu_col_tr].isin(sel_edu)]
+
+    # ---------------------------------------------------------
+    # 1. Build a master DataFrame by joining all three datasets
+    #    Finance + Salary use globally filtered f_fin, f_sal
+    #    Trends uses filtered tr_base
+    # ---------------------------------------------------------
+
+    # --- helper: safe numeric ---
+    def _to_num_safe(s: pd.Series) -> pd.Series:
+        return pd.to_numeric(s, errors="coerce")
+
+    # --- helper: mid-point from experience band (for salary) ---
+    def _mid_from_band_master(txt):
+        if pd.isna(txt):
+            return np.nan
+        t = str(txt).lower().strip()
+        m = re.match(r"(\d+)\s*\+\s*", t)          # e.g. "20+ yrs"
+        if m:
+            return float(m.group(1)) + 2.0
+        m = re.match(r"(\d+)\s*[-–]\s*(\d+)", t)   # e.g. "3-5 yrs"
+        if m:
+            a, b = float(m.group(1)), float(m.group(2))
+            return (a + b) / 2.0
+        if "less" in t and "1" in t:
+            return 0.5
+        m = re.search(r"(\d+(?:\.\d+)?)", t)
+        return float(m.group(1)) if m else np.nan
+
+    # --- helper: parse expected-return strings to numeric % ---
+    er_pat = re.compile(r"(-?\d+(?:\.\d+)?)")
+    def _parse_expected_series(series: pd.Series) -> pd.Series:
+        def _first(x):
+            if pd.isna(x):
+                return np.nan
+            m = er_pat.findall(str(x))
+            if not m:
+                return np.nan
+            v = float(m[0])
+            if v < 0 or v > 200:      # sanity clamp for % values
+                return np.nan
+            return v
+        return series.apply(_first).astype(float)
+
+    # ---------- Finance slice (already globally filtered = f_fin) ----------
+    fin_slice = pd.DataFrame(index=f_fin.index)
+    if col_gender and col_gender in f_fin.columns:
+        fin_slice["Gender"] = f_fin[col_gender]
+    if col_agegrp and col_agegrp in f_fin.columns:
+        fin_slice["Age_Group_fin"] = f_fin[col_agegrp]
+    if col_return and col_return in f_fin.columns:
+        fin_slice["Expected_Return_Fin_Raw"] = f_fin[col_return]
+        fin_slice["Expected_Return_Fin_%"] = _parse_expected_series(fin_slice["Expected_Return_Fin_Raw"])
+    if col_tenure and col_tenure in f_fin.columns:
+        fin_slice["Tenure_Preference"] = f_fin[col_tenure]
+    if col_monitor and col_monitor in f_fin.columns:
+        fin_slice["Monitor_Frequency"] = f_fin[col_monitor]
+    if col_invtype and col_invtype in f_fin.columns:
+        fin_slice["Investment_Type_Fin"] = f_fin[col_invtype]
+
+    # ---------- Salary slice (already globally filtered = f_sal) ----------
+    sal_slice = pd.DataFrame(index=f_sal.index)
+    if col_salary and col_salary in f_sal.columns:
+        sal_slice["Salary"] = _to_num_safe(f_sal[col_salary])
+    if col_edu and col_edu in f_sal.columns:
+        sal_slice["Education"] = f_sal[col_edu]
+
+    if col_expyrs and col_expyrs in f_sal.columns:
+        sal_slice["Years_Experience"] = _to_num_safe(f_sal[col_expyrs])
+    elif col_expband and col_expband in f_sal.columns:
+        sal_slice["Years_Experience"] = f_sal[col_expband].apply(_mid_from_band_master)
+
+    # ---------- Trends slice (NOW using filtered tr_base) ----------
+    trn_slice = pd.DataFrame(index=tr_base.index)
+    # trends has lowercase column names such as 'gender', 'age', 'Expect', 'Avenue'
+    if "gender" in tr_base.columns:
+        trn_slice["Gender_trends"] = tr_base["gender"]
+    if "age" in tr_base.columns:
+        trn_slice["Age_Trends"] = _to_num_safe(tr_base["age"])
+    if "Age_Group_tr" in tr_base.columns:
+        trn_slice["Age_Group_tr"] = tr_base["Age_Group_tr"]
+    if "Expect" in tr_base.columns:
+        trn_slice["Expected_Return_Trends_Raw"] = tr_base["Expect"]
+        trn_slice["Expected_Return_Trends_%"] = _parse_expected_series(trn_slice["Expected_Return_Trends_Raw"])
+    if "Avenue" in tr_base.columns:
+        trn_slice["Investment_Avenue_Trends"] = tr_base["Avenue"]
+    elif "Investment_Avenues" in tr_base.columns:
+        trn_slice["Investment_Avenue_Trends"] = tr_base["Investment_Avenues"]
+    if "Invest_Monitor" in tr_base.columns:
+        trn_slice["Monitor_Trends"] = tr_base["Invest_Monitor"]
+
+    # ---------- Combine all three into one master view ----------
+    master = fin_slice.join(sal_slice, how="outer").join(trn_slice, how="outer")
+
+    # Combined expected-return metric using both surveys when available
+    if {"Expected_Return_Fin_%", "Expected_Return_Trends_%"} & set(master.columns):
+        master["Expected_Return_Combined_%"] = master[
+            ["Expected_Return_Fin_%", "Expected_Return_Trends_%"]
+        ].mean(axis=1)
+
+    # ---------------------------------------------------------
+    # 2. Charts on top of the integrated table
+    # ---------------------------------------------------------
+    st.markdown("### 1. Salary vs Combined Expected Return (by Investment Avenue)")
+
+    if "Salary" in master.columns and "Expected_Return_Combined_%" in master.columns:
+        scatter_df = master[["Salary", "Expected_Return_Combined_%",
+                             "Investment_Avenue_Trends", "Education"]].copy()
+        scatter_df = scatter_df.dropna(subset=["Salary", "Expected_Return_Combined_%"])
+        if not scatter_df.empty:
+            fig_sc = px.scatter(
+                scatter_df,
+                x="Salary",
+                y="Expected_Return_Combined_%",
+                color="Investment_Avenue_Trends",
+                hover_data=["Education"],
+                trendline="ols",
+                title="Salary vs Combined Expected Return (%) by Investment Avenue",
+            )
+            fig_sc.update_layout(
+                xaxis_title="Salary",
+                yaxis_title="Combined Expected Return (%)",
+                legend_title="Investment Avenue (Trends)",
+            )
+            st.plotly_chart(fig_sc, use_container_width=True)
+            st.markdown(
+                "- **What it shows:** Integrates **income (Salary)** from the Salary dataset with "
+                "**risk appetite (Expected Return)** from both Finance and Trends, and colors points "
+                "by investment avenue from the Trends file.\n"
+                "- **Why it’s complex:** This chart is powered by a row-wise join of three different "
+                "survey sources, all filtered using the same global controls."
+            )
+        else:
+            st.info("Not enough overlapping Salary and Expected_Return_Combined_% values to draw the scatter.")
+    else:
+        st.info("Salary or Expected_Return_Combined_% is missing from the integrated view.")
+
+    st.divider()
+
+    # ---------------------------------------------------------
+    # 3. Education vs Expected Return (using Trends' Expect column)
+    # ---------------------------------------------------------
+    st.markdown("### 2. Expected Return (%) by Education Level")
+
+    if "Education" in master.columns and "Expected_Return_Trends_%" in master.columns:
+        edu_df = master[["Education", "Expected_Return_Trends_%"]].dropna()
+        if not edu_df.empty:
+            fig_violin = px.violin(
+                edu_df,
+                x="Education",
+                y="Expected_Return_Trends_%",
+                box=True,
+                points="all",
+                title="Expected Return (%) by Education Level (Trends + Salary Integration)",
+            )
+            fig_violin.update_layout(
+                xaxis_title="Education Level",
+                yaxis_title="Expected Return (%) (From Trends.Expect)",
+            )
+            st.plotly_chart(fig_violin, use_container_width=True)
+            st.markdown(
+                "- **What it shows:** Combines **Education** from the Salary dataset with "
+                "**expected returns** from the Trends dataset, showing how expectations vary "
+                "with education across sources.\n"
+                "- **Filters:** This view respects the global Education + Gender filters in the sidebar."
+            )
+        else:
+            st.info("No overlapping Education and Expected_Return_Trends_% data available after filters.")
+    else:
+        st.info("Education or Expected_Return_Trends_% is missing in the integrated view.")
+
+    st.divider()
+
+    # ---------------------------------------------------------
+    # 4. Multi-source correlation panel
+    # ---------------------------------------------------------
+    st.markdown("### 3. Correlation Across Finance + Salary + Trends Features")
+
+    corr_cols = {}
+    if "Salary" in master.columns:
+        corr_cols["sal_Salary"] = master["Salary"]
+    if "Years_Experience" in master.columns:
+        corr_cols["sal_YearsExperience"] = master["Years_Experience"]
+    if "Expected_Return_Fin_%" in master.columns:
+        corr_cols["fin_ExpectedReturn"] = master["Expected_Return_Fin_%"]
+    if "Expected_Return_Trends_%" in master.columns:
+        corr_cols["trn_ExpectedReturn"] = master["Expected_Return_Trends_%"]
+    if "Age_Trends" in master.columns:
+        corr_cols["trn_Age"] = master["Age_Trends"]
+
+    if corr_cols:
+        corr_df = pd.DataFrame(corr_cols).dropna(how="all")
+        corr_df = corr_df.loc[:, corr_df.std(numeric_only=True) > 0]
+        if corr_df.shape[1] >= 2:
+            corr = corr_df.corr()
+            fig_corr = px.imshow(
+                corr,
+                text_auto=".2f",
+                aspect="auto",
+                title="Correlation — Integrated Finance (fin_), Salary (sal_) & Trends (trn_)",
+            )
+            fig_corr.update_xaxes(tickangle=45)
+            st.plotly_chart(fig_corr, use_container_width=True)
+            st.markdown(
+                "- **What it shows:** A single correlation matrix containing numeric features from "
+                "**all three datasets**. Prefixes make the source explicit:\n"
+                "  - `fin_` → Finance survey\n"
+                "  - `sal_` → Salary survey\n"
+                "  - `trn_` → Trends dataset\n"
+                "- **Why it’s complex:** This is computed on a wide table formed by joining three "
+                "different sources and then selecting numeric columns across them, all subject to the "
+                "same filters."
+            )
+        else:
+            st.info("Not enough numeric variability to render the integrated correlation heatmap.")
+    else:
+        st.info("No numeric columns available for combined correlation.")
+
+    st.divider()
+
+    # ---------------------------------------------------------
+    # 5. Short technical explanation (good for your report)
+    # ---------------------------------------------------------
+    with st.container(border=True):
+        st.markdown("#### Behind the Scenes: Data Integration Logic")
+        st.markdown(
+            """
+            - The **Integrated Respondent View** joins three separate survey files:
+              **Finance_Dataset_Cleaned**, **Salary_Dataset_Cleaned**, and **Finance_Trends_Cleaned**.
+            - Global sidebar filters (Gender, Age Group, Education, Experience Band) are applied consistently
+              to finance, salary, and trends wherever the corresponding fields exist.
+            - Demographics such as **Gender** and **Age** are standardized and aligned across files by index.
+            - Expected return is parsed from **two different question formats** (Finance + Trends) into a common
+              numeric `%` scale and combined into a single metric.
+            - The resulting master table powers cross-source charts (e.g., *Salary vs Combined Expected Return*),
+              illustrating multi-dataset integration under a unified filter panel.
+            """
+        )
+
+# =============================================================
+# PAGE X: MODELING & PREDICTION (Risk Appetite Classification)
+# =============================================================
+elif page == "Modeling & Prediction":
+
+    st.subheader("Modeling & Prediction — Risk Appetite")
+
+    # ------------------------------------------------------------------
+    # INTRO — high-level explanation for non-technical audience
+    # ------------------------------------------------------------------
+    st.markdown("""
+    This page is divided into **two parts**:
+
+    1. **A. Modeling — How the machine learning models are built and evaluated**  
+       We combine finance and salary survey data, train **4 different models**, 
+       and compare how well they predict each person's **Risk Appetite**:
+       - Low
+       - Moderate
+       - Aggressive
+
+    2. **B. Prediction — Try the models on a new person**  
+       You can enter a hypothetical profile (age group, salary, experience, etc.) 
+       and see what Risk Appetite the selected model would predict.
+
+    This directly addresses the assignment requirement:
+
+    > **4. Model Development and Evaluation (20%)**  
+    > • Implement at least two different machine learning models  
+    > • Perform thorough model evaluation and comparison  
+    > • Demonstrate understanding of model selection and validation techniques
+    """)
+
+    # ==================================================================
+    # A. MODELING SECTION
+    # ==================================================================
+    st.markdown("## A. Modeling — How the Models Learn")
+
+    # --------------------------------------------------------------
+    # 1. Build the modelling dataset (join Finance + Salary)
+    # --------------------------------------------------------------
+    st.markdown("### 1. Building the Modelling Dataset")
+
+    st.markdown("""
+    We first create **one clean table** where each row is a respondent and columns include:
+
+    - Demographics: **Gender**, **Age Group**, **Education**
+    - Professional info: **Salary**, **Years of Experience**
+    - Target label: **Risk Appetite** (Low / Moderate / Aggressive)
+
+    Risk Appetite is derived from the respondent's **Expected Return %**.
+    """)
+
+    fin_mod = f_fin.copy()
+    sal_mod = f_sal.copy()
+
+    # ---- Parse Expected Return % from Finance ----
+    num_pat = re.compile(r"(-?\d+(?:\.\d+)?)")
+
+    def parse_expected_return(series: pd.Series) -> pd.Series:
+        """Extract first numeric percent from messy strings like '10%', '8–12%', '~12'."""
+        def _first(x):
+            if pd.isna(x):
+                return np.nan
+            m = num_pat.findall(str(x))
+            if not m:
+                return np.nan
+            v = float(m[0])
+            if v < 0 or v > 200:  # sanity clamp for % values
+                return np.nan
+            return v
+        return series.apply(_first).astype(float)
+
+    exp_col = col_return if col_return and (col_return in fin_mod.columns) else None
+
+    if not exp_col:
+        st.warning("No 'Expected Return' column found in the finance data. Cannot build the risk appetite model.")
+    else:
+        fin_mod["ExpectedReturnPct"] = parse_expected_return(fin_mod[exp_col])
+
+        # ---- Derive Risk Appetite target variable ----
+        fin_mod["Risk_Appetite"] = pd.cut(
+            fin_mod["ExpectedReturnPct"],
+            bins=[-np.inf, 6, 10, np.inf],
+            labels=["Low", "Moderate", "Aggressive"]
+        )
+
+        # ---- Bring in Salary, Education, Experience from Salary dataset ----
+        join_cols = {}
+
+        if col_salary and col_salary in sal_mod.columns:
+            join_cols["Salary"] = pd.to_numeric(sal_mod[col_salary], errors="coerce")
+
+        if col_edu and col_edu in sal_mod.columns:
+            join_cols["Education"] = sal_mod[col_edu]
+
+        # Years of experience: numeric or derived from band
+        if col_expyrs and col_expyrs in sal_mod.columns:
+            join_cols["YearsExperience"] = pd.to_numeric(sal_mod[col_expyrs], errors="coerce")
+        elif col_expband and col_expband in sal_mod.columns:
+            def _mid_from_band(txt):
+                if pd.isna(txt):
+                    return np.nan
+                t = str(txt).lower().strip()
+                m = re.match(r"(\d+)\s*\+\s*", t)          # "20+ yrs"
+                if m:
+                    return float(m.group(1)) + 2.0
+                m = re.match(r"(\d+)\s*[-–]\s*(\d+)", t)   # "3-5 yrs"
+                if m:
+                    a, b = float(m.group(1)), float(m.group(2))
+                    return (a + b) / 2.0
+                if "less" in t and "1" in t:              # "Less than 1 year"
+                    return 0.5
+                m = re.search(r"(\d+(?:\.\d+)?)", t)
+                return float(m.group(1)) if m else np.nan
+            join_cols["YearsExperience"] = sal_mod[col_expband].apply(_mid_from_band)
+
+        sal_slice = pd.DataFrame(join_cols)
+
+        # Join Finance + Salary by index (each row = same respondent)
+        data = fin_mod.join(sal_slice, how="inner")
+
+        # ---- Choose features we will use ----
+        feature_cols = []
+
+        if col_gender and col_gender in data.columns:
+            feature_cols.append(col_gender)          # gender
+
+        if col_agegrp and col_agegrp in data.columns:
+            feature_cols.append(col_agegrp)          # age group
+
+        for c in ["Education", "Salary", "YearsExperience"]:
+            if c in data.columns:
+                feature_cols.append(c)
+
+        # Remove duplicates while keeping order
+        feature_cols = [c for c in dict.fromkeys(feature_cols) if c in data.columns]
+
+        # Final modelling table
+        model_df = data[feature_cols + ["Risk_Appetite"]].dropna()
+
+        if model_df.empty:
+            st.warning("After cleaning and joining, no complete rows remain for modelling.")
+        else:
+            st.write(f"Rows available for modelling: **{len(model_df)}**")
+
+            st.markdown("Preview of the modelling table:")
+            st.dataframe(model_df.head(), use_container_width=True)
+
+            st.markdown("""
+            Each row above is **one respondent**.  
+            The last column `Risk_Appetite` is what we want the model to predict.
+            """)
+
+            # --------------------------------------------------------------
+            # 2. Train / Test split
+            # --------------------------------------------------------------
+            st.markdown("### 2. Train / Test Split")
+
+            X = model_df[feature_cols].copy()
+            y = model_df["Risk_Appetite"].copy()
+
+            # Categorical vs numeric features
+            cat_cols = [c for c in feature_cols if X[c].dtype == "object"]
+            num_cols = [c for c in feature_cols if c not in cat_cols]
+
+            preprocessor = ColumnTransformer(
+                transformers=[
+                    ("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols),
+                    ("num", "passthrough", num_cols),
+                ]
+            )
+
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.3, random_state=42, stratify=y
+            )
+
+            st.write(f"Train size: **{X_train.shape[0]}**, Test size: **{X_test.shape[0]}**")
+
+            st.markdown("""
+            - The model learns patterns from the **training set (70%)**.  
+            - We keep the **test set (30%)** hidden until the end, to see how well the model works on **new, unseen people**.
+            """)
+
+            # --------------------------------------------------------------
+            # 3. Define FOUR different models
+            # --------------------------------------------------------------
+            st.markdown("### 3. Four Machine Learning Models")
+
+            st.markdown("""
+            We train and compare these four models:
+
+            1. **Logistic Regression** – simple, linear and interpretable  
+            2. **Random Forest** – many decision trees combined (usually strong performance)  
+            3. **K-Nearest Neighbors (KNN)** – looks at people with similar profiles  
+            4. **Decision Tree** – interpretable tree-shaped set of rules
+
+            All four models use the **same input features** and are evaluated on the **same test set**.
+            """)
+
+            # Define base classifiers
+            base_models = {
+                "Logistic Regression": LogisticRegression(max_iter=1000, multi_class="multinomial"),
+                "Random Forest": RandomForestClassifier(n_estimators=200, random_state=42),
+                "K-Nearest Neighbors": KNeighborsClassifier(n_neighbors=7),
+                "Decision Tree": DecisionTreeClassifier(max_depth=None, random_state=42),
+            }
+
+            fitted_models = {}
+            preds_test = {}
+            probas_test = {}
+            metrics_rows = []
+            cv_rows = []
+
+            labels = ["Low", "Moderate", "Aggressive"]
+
+            for name, clf in base_models.items():
+                pipe = Pipeline(
+                    steps=[
+                        ("prep", preprocessor),
+                        ("clf", clf)
+                    ]
+                )
+
+                # Fit on training data
+                pipe.fit(X_train, y_train)
+
+                # Store fitted model
+                fitted_models[name] = pipe
+
+                # Predictions on the held-out test set
+                y_pred = pipe.predict(X_test)
+                preds_test[name] = y_pred
+
+                # Probabilities if available
+                if hasattr(pipe, "predict_proba"):
+                    probas_test[name] = pipe.predict_proba(X_test)
+
+                # Test metrics
+                acc = accuracy_score(y_test, y_pred)
+                f1 = f1_score(y_test, y_pred, average="weighted")
+                metrics_rows.append({"Model": name, "Accuracy": acc, "F1 (weighted)": f1})
+
+                # Cross-validation (5-fold)
+                cv_scores = cross_val_score(pipe, X, y, cv=5, scoring="accuracy")
+                cv_rows.append({
+                    "Model": name,
+                    "CV mean accuracy": cv_scores.mean(),
+                    "CV std": cv_scores.std()
+                })
+
+            metrics_df = pd.DataFrame(metrics_rows).round(3)
+            cv_df = pd.DataFrame(cv_rows).round(3)
+
+            # --------------------------------------------------------------
+            # 4. Evaluation tables
+            # --------------------------------------------------------------
+            st.markdown("### 4. Model Evaluation — Test Set")
+
+            st.dataframe(metrics_df, use_container_width=True)
+
+            st.markdown("""
+            **How to read this table (no ML background needed):**
+
+            - **Accuracy**: percentage of people the model classified correctly.  
+            - **F1 (weighted)**: balances correctness across the three classes (Low / Moderate / Aggressive).  
+              Higher values are better, especially if one group is smaller than the others.
+            """)
+
+            st.markdown("### 5. Cross-Validation (5-fold)")
+
+            st.dataframe(cv_df, use_container_width=True)
+
+            st.markdown("""
+            **What is cross-validation?**
+
+            - We shuffle the data and split it into **5 different train/test folds**.  
+            - Each model is trained and tested 5 times on different slices of the data.  
+            - We look at the **average accuracy** and how much it **varies (CV std)**.  
+            - This tells us whether a model is **stable and reliable**, not just lucky on one split.
+            """)
+
+            # --------------------------------------------------------------
+            # 6. Visual evaluation (Confusion Matrix, Feature Importance, Probabilities)
+            # --------------------------------------------------------------
+            st.markdown("### 6. Visual Evaluation")
+
+            st.markdown("""
+            Use the dropdown below to inspect each model visually:
+
+            - **Confusion Matrix** – where the model is correct and where it is confused  
+            - **Feature Importance** – which inputs matter most (for tree-based models)  
+            - **Prediction Confidence** – how sure the model is when it predicts each class
+            """)
+
+            model_choice = st.selectbox(
+                "Choose a model to inspect:",
+                list(fitted_models.keys()),
+                index=1  # default to Random Forest
+            )
+
+            # ---- Confusion Matrix ----
+            st.markdown("#### 6.1 Confusion Matrix")
+
+            y_pred_sel = preds_test[model_choice]
+            cm = confusion_matrix(y_test, y_pred_sel, labels=labels)
+
+            fig_cm = px.imshow(
+                cm,
+                x=labels,
+                y=labels,
+                text_auto=True,
+                color_continuous_scale="Blues",
+                aspect="auto",
+                title=f"{model_choice} — Confusion Matrix"
+            )
+            fig_cm.update_xaxes(title="Predicted")
+            fig_cm.update_yaxes(title="Actual")
+            st.plotly_chart(fig_cm, use_container_width=True)
+
+            st.markdown("""
+            - The **diagonal cells** (top-left to bottom-right) are **correct predictions**.  
+            - Numbers off the diagonal show where the model **confused one risk level with another**  
+              (for example predicting *Moderate* when the person was actually *Aggressive*).
+            """)
+
+            # ---- Feature Importance (for tree-based models) ----
+            st.markdown("#### 6.2 Which Features Matter Most? (Feature Importance)")
+
+            from sklearn.ensemble import RandomForestClassifier
+            from sklearn.tree import DecisionTreeClassifier
+
+            selected_model = fitted_models[model_choice]
+            clf_step = selected_model.named_steps["clf"]
+
+            # Get feature names from the preprocessor
+            prep = selected_model.named_steps["prep"]
+
+            if cat_cols:
+                cat_transformer = prep.named_transformers_["cat"]
+                cat_feature_names = list(cat_transformer.get_feature_names_out(cat_cols))
+            else:
+                cat_feature_names = []
+
+            num_feature_names = num_cols
+            all_feature_names = cat_feature_names + num_feature_names
+
+            if hasattr(clf_step, "feature_importances_"):
+                importances = clf_step.feature_importances_
+                fi_df = pd.DataFrame({
+                    "Feature": all_feature_names,
+                    "Importance": importances
+                }).sort_values("Importance", ascending=False).head(15)
+
+                fig_imp = px.bar(
+                    fi_df,
+                    x="Importance",
+                    y="Feature",
+                    orientation="h",
+                    title=f"Top Feature Importances — {model_choice}",
+                    color="Importance",
+                    color_continuous_scale="Viridis"
+                )
+                fig_imp.update_layout(xaxis_title="Importance (higher = more influence)")
+                st.plotly_chart(fig_imp, use_container_width=True)
+
+                st.markdown("""
+                Features near the **top** of this chart have the biggest influence on the model’s decision.
+                For example, if **Salary** and **YearsExperience** appear at the top,
+                it means people’s professional profile strongly shapes their risk appetite.
+                """)
+            else:
+                st.info(f"{model_choice} does not provide built-in feature importance (it is not a tree-based model).")
+
+            # ---- Prediction probabilities ----
+            st.markdown("#### 6.3 How Confident Is the Model? (Prediction Probabilities)")
+
+            if model_choice in probas_test:
+                prob = probas_test[model_choice]
+                prob_df = pd.DataFrame(prob, columns=fitted_models[model_choice].classes_)
+
+                fig_prob = px.box(
+                    prob_df,
+                    title=f"{model_choice} — Prediction Confidence by Class"
+                )
+                fig_prob.update_yaxes(title="Predicted Probability")
+                st.plotly_chart(fig_prob, use_container_width=True)
+
+                st.caption("""
+                Each box shows how confident the model is on average for each class:
+
+                - Higher probabilities = the model is usually **sure** when it predicts that class.  
+                - If the boxes are low and flat, the model is often **uncertain**.
+                """)
+            else:
+                st.info(f"{model_choice} does not output probabilities, so confidence plots are not available.")
+
+            # ==================================================================
+            # B. PREDICTION SECTION — interactive "try it yourself"
+            # ==================================================================
+            st.markdown("## B. Prediction — Try the Models on a New Profile")
+
+            st.markdown("""
+            Below you can **simulate a new person** by choosing their characteristics.
+            The selected model will predict whether they are likely to have a **Low, Moderate, or Aggressive** risk appetite.
+            """)
+
+            # Build simple input widgets based on available feature columns
+            with st.form("manual_prediction_form"):
+                cols_ui = st.columns(2)
+
+                input_data = {}
+
+                # Categorical fields
+                if col_gender in feature_cols:
+                    opts = sorted(model_df[col_gender].dropna().unique())
+                    input_data[col_gender] = cols_ui[0].selectbox("Gender", opts)
+
+                if col_agegrp in feature_cols:
+                    opts = sorted(model_df[col_agegrp].dropna().unique())
+                    input_data[col_agegrp] = cols_ui[1].selectbox("Age Group", opts)
+
+                if "Education" in feature_cols:
+                    opts = sorted(model_df["Education"].dropna().unique())
+                    input_data["Education"] = cols_ui[0].selectbox("Education Level", opts)
+
+                # Numeric fields
+                if "Salary" in feature_cols:
+                    s_min = float(model_df["Salary"].min())
+                    s_max = float(model_df["Salary"].max())
+                    input_data["Salary"] = cols_ui[1].slider(
+                        "Annual Salary",
+                        min_value=int(s_min),
+                        max_value=int(s_max),
+                        value=int(model_df["Salary"].median()),
+                        step=1000
+                    )
+
+                if "YearsExperience" in feature_cols:
+                    e_min = float(model_df["YearsExperience"].min())
+                    e_max = float(model_df["YearsExperience"].max())
+                    input_data["YearsExperience"] = cols_ui[0].slider(
+                        "Years of Experience",
+                        min_value=float(np.floor(e_min)),
+                        max_value=float(np.ceil(e_max)),
+                        value=float(np.median(model_df["YearsExperience"])),
+                        step=1.0
+                    )
+
+                # Choose model for prediction (can be different from the one inspected above)
+                pred_model_name = st.selectbox(
+                    "Choose a model for prediction:",
+                    list(fitted_models.keys()),
+                    index=1,
+                    key="pred_model_choice"
+                )
+
+                submitted = st.form_submit_button("Predict Risk Appetite")
+
+            if submitted:
+                x_new = pd.DataFrame([input_data])
+                model_pred = fitted_models[pred_model_name]
+                pred_label = model_pred.predict(x_new)[0]
+
+                st.markdown(f"### Predicted Risk Appetite: **{pred_label}**")
+
+                if hasattr(model_pred, "predict_proba"):
+                    prob_new = model_pred.predict_proba(x_new)[0]
+                    prob_df_new = pd.DataFrame({
+                        "Risk Appetite": model_pred.classes_,
+                        "Probability": prob_new
+                    })
+                    fig_new = px.bar(
+                        prob_df_new,
+                        x="Risk Appetite",
+                        y="Probability",
+                        title=f"{pred_model_name} — Prediction Confidence for This Person",
+                        text_auto=True
+                    )
+                    fig_new.update_yaxes(range=[0, 1])
+                    st.plotly_chart(fig_new, use_container_width=True)
+
+                    st.markdown("""
+                    - The bar shows how strongly the model believes in each category.  
+                    - The highest bar corresponds to the predicted risk appetite.
+                    """)
+                else:
+                    st.info(f"{pred_model_name} does not provide probability scores — only the predicted label is shown.")
+
+            # ==================================================================
+            # C. RESULT & INTERPRETATION SECTION
+            # ==================================================================
+            st.markdown("## C. Results & Interpretation")
+
+            # Choose the best model by Accuracy (you can also pick F1 if you like)
+            best_row = metrics_df.sort_values("Accuracy", ascending=False).iloc[0]
+            best_model_name = best_row["Model"]
+            best_acc = best_row["Accuracy"]
+            best_f1 = best_row["F1 (weighted)"]
+
+            with st.container(border=True):
+                st.markdown("### Summary for Report / Presentation")
+
+                st.markdown(f"""
+                **Best-performing model (based on test accuracy):**  
+                - **{best_model_name}** with **Accuracy ≈ {best_acc:.3f}** and **F1 ≈ {best_f1:.3f}**
+
+                **Key takeaways (explained simply):**
+
+                - We built a **combined dataset** from Finance and Salary files that describes each person’s
+                  demographics, professional profile, and Risk Appetite.
+                - We trained **four different machine learning models** on the same data:
+                  Logistic Regression, Random Forest, K-Nearest Neighbors and Decision Tree.
+                - We evaluated them using:
+                  - A proper **train/test split** (70/30),
+                  - **Accuracy & F1-score** on the unseen test set,
+                  - **5-fold cross-validation** to check stability,
+                  - **Confusion matrices**, **feature importance**, and **prediction confidence plots**.
+
+                - This shows we understand:
+                  - **Model development** (choosing features, defining a target, training multiple models),  
+                  - **Model evaluation & comparison** (metrics + visual diagnostics), and  
+                  - **Model selection & validation** (using test sets and cross-validation to justify which
+                    model we trust most).
+
+                In a presentation to a non-technical audience, you can summarise it as:
+
+                > “We experimented with four different AI methods to predict whether a person is a
+                > low, moderate or aggressive investor.  
+                > We tested each one fairly on new people it had never seen before, and the
+                > best-performing model was **{best_model_name}**, which correctly classified roughly
+                > {best_acc:.0%} of investors. We also checked which factors matter most (salary, age group,
+                > education, etc.) and visualised where the models make mistakes so that the results
+                > are transparent and trustworthy.”
+                """)
+            
 
 # =============================================================
 # PAGE 2: INVESTMENT BEHAVIOR
@@ -1689,9 +2517,10 @@ elif page == "Interactive Data Explorer":
         return counts.sort_values("MissingPct", ascending=False)
 
     # ---------------------------
-    # Tabs for Finance and Salary datasets
+    # Tabs for Finance, Salary and Trends datasets
     # ---------------------------
-    tab_fin, tab_sal = st.tabs(["Finance", "Salary"])
+    #tab_fin, tab_sal = st.tabs(["Finance", "Salary"])
+    tab_fin, tab_sal, tab_trn = st.tabs(["Finance", "Salary", "Trends"])
 
     # ---------------------------
     # PAGE-LEVEL FILTERS (SIDEBAR)
@@ -1740,6 +2569,15 @@ elif page == "Interactive Data Explorer":
         return fin2, sal2
 
     fin_view, sal_view = apply_page_filters(f_fin, f_sal)
+    
+    # Filtered view for Trends dataset (reuse same sidebar filters where columns exist)
+    tr_view = trends.copy()
+    if col_gender and p6_gender and col_gender in tr_view.columns:
+        tr_view = tr_view[tr_view[col_gender].isin(p6_gender)]
+    if col_agegrp and p6_age and col_agegrp in tr_view.columns:
+        tr_view = tr_view[tr_view[col_agegrp].isin(p6_age)]
+    if col_edu and p6_edu and col_edu in tr_view.columns:
+        tr_view = tr_view[tr_view[col_edu].isin(p6_edu)]
 
     # ---------------------------
     # FINANCE TAB
@@ -2007,17 +2845,10 @@ elif page == "Interactive Data Explorer":
         )
 
     # ---------------------------
-    # SALARY TAB  (unchanged logic)
-    # ---------------------------
-    with tab_sal:
-        st.markdown("#### Salary Dataset")
-
-
-            # ---------------------------
     # SALARY TAB
     # ---------------------------
     with tab_sal:
-        st.markdown("#### Salary Dataset")
+        st.markdown("### Salary Dataset")
 
         # ---------------------------
         # Data Cleaning Summary — Salary_Dataset_Cleaned.csv
@@ -2217,6 +3048,249 @@ elif page == "Interactive Data Explorer":
             "salary_filtered.csv",
             "text/csv",
             key="p6_dl_sal",
+        )
+
+    # ---------------------------
+    # TRENDS TAB
+    # ---------------------------
+    with tab_trn:
+        st.markdown("### Trends Dataset")
+
+        # ---------------------------
+        # Data Cleaning Summary — Trends Dataset
+        # (reuses .step-card CSS defined in the Finance tab)
+        # ---------------------------
+        with st.container(border=True):
+            st.markdown("#### Data Cleaning Summary — Trends Dataset")
+
+            # Step 1: Basic hygiene & text normalization
+            st.markdown(
+                """
+                <div class="step-card">
+                  <div class="step-header">
+                    <span class="step-pill">Step 1</span>
+                    <span class="step-title">Basic Hygiene &amp; Text Normalization</span>
+                  </div>
+                  <div class="step-body">
+                    <ul>
+                      <li>Trimmed whitespace from all column headers so names like <code>" Age "</code> become <code>"Age"</code>.</li>
+                      <li>Stripped leading/trailing spaces from every text cell to avoid variants like <code>" Gold "</code> vs <code>"Gold"</code>.</li>
+                      <li>Standardized key categorical fields such as <code>Gender</code>, <code>Segment</code>, <code>Region</code>, <code>Category</code>, and <code>Investment Type</code> into tidy Title Case labels (e.g., <code>"male"</code> → <code>"Male"</code>).</li>
+                    </ul>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # Step 2: Numeric type inference, percentages & missing values
+            st.markdown(
+                """
+                <div class="step-card">
+                  <div class="step-header">
+                    <span class="step-pill">Step 2</span>
+                    <span class="step-title">Numeric Detection, Percent Parsing &amp; Missing Values</span>
+                  </div>
+                  <div class="step-body">
+                    <ul>
+                      <li>Scanned column names for numeric-like patterns (<code>amount</code>, <code>value</code>, <code>score</code>, <code>age</code>, <code>rate</code>, <code>return</code>, <code>%</code>, etc.) to identify fields that should be numeric.</li>
+                      <li>For percentage-style columns (names or values containing <code>"%"</code>), removed percent signs and commas, then safely converted them to numeric values.</li>
+                      <li>Applied a <code>to_numeric_if_possible</code> rule: only kept a numeric conversion if more than 30% of values truly behaved like numbers, otherwise preserved the original text.</li>
+                      <li>Used an advanced <strong>KNNImputer</strong> on the numeric block to fill missing numeric values based on nearest neighbors.</li>
+                      <li>For categorical fields, normalized literal <code>"nan"</code> placeholders and filled remaining missing values with a consistent label <code>"Unknown"</code>.</li>
+                    </ul>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # Step 3: Outliers, feature bands & clean exploratory file
+            st.markdown(
+                """
+                <div class="step-card">
+                  <div class="step-header">
+                    <span class="step-pill">Step 3</span>
+                    <span class="step-title">Outliers, Feature Bands &amp; Clean Exploratory Output</span>
+                  </div>
+                  <div class="step-body">
+                    <ul>
+                      <li>Ran <strong>Local Outlier Factor (LOF)</strong> on the numeric block to flag multivariate anomalies in a new column <code>Is_Outlier_LOF</code>, and (with <code>DROP_OUTLIERS=True</code>) removed those rows from the clean dataset.</li>
+                      <li>Engineered useful behavioral segments:
+                        <ul>
+                          <li><strong>Age Group</strong> from <code>Age</code> (e.g., <code>18–24</code>, <code>25–34</code>, <code>35–44</code>, <code>45–54</code>, <code>55+</code>).</li>
+                          <li><strong>Tenure Band</strong> from investment-duration columns such as <code>Years Invested</code> or <code>Investment Duration (Years)</code> (e.g., <code>0–1 yrs</code>, <code>2–4 yrs</code>, <code>5–9 yrs</code>, …).</li>
+                          <li><strong>Risk Band</strong> (Low / Medium / High) from <code>Expected Return %</code>, <code>Expected Return</code>, or <code>Risk Score</code>, using 33rd and 66th percentile cut-points.</li>
+                        </ul>
+                      </li>
+                      <li>Removed exact duplicate rows so each trends respondent is counted only once.</li>
+                      <li>Saved a clean, human-readable file <code>Finance_Trends_Cleaned.csv</code> for use in this dashboard, and also generated a separate ML-oriented file (<code>Finance_Trends_ML.csv</code>) with encoded, scaled and feature-reduced variables for modeling work outside the app.</li>
+                    </ul>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        # ---------------------------
+        # Main Trends Charts
+        # ---------------------------
+        gridT1, gridT2 = st.columns(2)
+
+        # ---------------------------
+        # Derive helper fields from Trends data for charts
+        # ---------------------------
+        tr_view = tr_view.copy()  # work on a local copy
+
+        # 1) Age_Group from numeric age
+        def _age_to_group(x):
+            try:
+                a = float(x)
+            except Exception:
+                return np.nan
+            if a <= 24: return "18-24"
+            if a <= 34: return "25-34"
+            if a <= 44: return "35-44"
+            if a <= 54: return "45-54"
+            return "55+"
+
+        if "age" in tr_view.columns:
+            tr_view["Age_Group"] = tr_view["age"].apply(_age_to_group)
+
+        # 2) Expected_Return_Pct from the "Expect" column (e.g. "20%-30%")
+        exp_pat = re.compile(r"(\d+(?:\.\d+)?)")
+
+        def _parse_expect(x):
+            if pd.isna(x):
+                return np.nan
+            m = exp_pat.findall(str(x))
+            if not m:
+                return np.nan
+            v = float(m[0])  # first number in the range, e.g. "20%-30%" -> 20
+            if v < 0 or v > 200:
+                return np.nan
+            return v
+
+        if "Expect" in tr_view.columns:
+            tr_view["Expected_Return_Pct"] = tr_view["Expect"].apply(_parse_expect)
+
+        # ---------------------------
+        # Main Trends Charts (3 charts)
+        # ---------------------------
+        gridT1, gridT2 = st.columns(2)
+
+        # 1) Expected Return (%) by Age Group (box plot)
+        with gridT1:
+            st.markdown("### Expected Return (%) by Age Group")
+            if {"Age_Group", "Expected_Return_Pct"}.issubset(tr_view.columns):
+                tmp = tr_view[["Age_Group", "Expected_Return_Pct"]].dropna()
+                if not tmp.empty:
+                    fig_risk_age = px.box(
+                        tmp,
+                        x="Age_Group",
+                        y="Expected_Return_Pct",
+                        title="Expected Return (%) by Age Group",
+                    )
+                    fig_risk_age.update_layout(
+                        xaxis_title="Age Group",
+                        yaxis_title="Expected Return (%)",
+                    )
+                    st.plotly_chart(fig_risk_age, use_container_width=True)
+                    st.caption(
+                        "**What it shows:** How return expectations differ across age groups "
+                        "in the trends sample."
+                    )
+                else:
+                    st.info("No usable Expected_Return_Pct values after filters.")
+            else:
+                st.info("Age_Group or Expected_Return_Pct column not available in Trends dataset.")
+
+        # 2) Expected Return (%) vs Age (scatter + trendline)
+        with gridT2:
+            st.markdown("### Expected Return (%) vs Age")
+            if {"age", "Expected_Return_Pct"}.issubset(tr_view.columns):
+                tmp = tr_view[["age", "Expected_Return_Pct"]].dropna()
+                if not tmp.empty:
+                    fig_ret_age = px.scatter(
+                        tmp,
+                        x="age",
+                        y="Expected_Return_Pct",
+                        trendline="ols",
+                        title="Expected Return (%) vs Age",
+                    )
+                    fig_ret_age.update_layout(
+                        xaxis_title="Age",
+                        yaxis_title="Expected Return (%)",
+                    )
+                    st.plotly_chart(fig_ret_age, use_container_width=True)
+                    st.caption(
+                        "**What it shows:** Whether older respondents in the trends data aim "
+                        "for higher or lower expected returns."
+                    )
+                else:
+                    st.info("Not enough overlapping Age and Expected_Return_Pct values after filters.")
+            else:
+                st.info("age or Expected_Return_Pct column not available in Trends dataset.")
+
+        st.divider()
+
+
+        # ---------------------------
+        # Missing Values — Trends
+        # ---------------------------
+        st.markdown("### Missing Values — Trends")
+        if not tr_view.empty:
+            miss_trn = _missing_counts(tr_view)
+            st.markdown("**Summary Table:** Missing counts and percentages (includes 'Unknown').")
+            st.dataframe(miss_trn)
+
+            top_trn = miss_trn.head(20).reset_index().rename(columns={"index": "Column"})
+            fig_mbar_trn = px.bar(
+                top_trn,
+                x="Column",
+                y="MissingPct",
+                title="Top 20 Missing Columns (%)",
+                color="MissingPct",
+                color_continuous_scale="Teal",
+            )
+            fig_mbar_trn.update_layout(xaxis_tickangle=45)
+            st.plotly_chart(fig_mbar_trn, use_container_width=True)
+
+            # Missingness heatmap (limit columns & rows for readability)
+            show_cols_trn = tr_view.columns[:30]
+            heat_mask_trn = tr_view[show_cols_trn].isna().copy()
+            for c in show_cols_trn:
+                if tr_view[c].dtype == object:
+                    s = tr_view[c].astype(str).str.strip().str.lower()
+                    heat_mask_trn[c] = heat_mask_trn[c] | s.isin({"unknown", "nan"})
+            hm_trn = heat_mask_trn.head(200).astype(int)
+            if hm_trn.shape[1] > 1:
+                fig_hm_trn = px.imshow(
+                    hm_trn.T,
+                    color_continuous_scale="Blues",
+                    aspect="auto",
+                    title="Missingness Heatmap (1=Missing, 0=Present)",
+                    labels=dict(x="Respondents", y="Columns", color="Missingness"),
+                )
+                st.plotly_chart(fig_hm_trn, use_container_width=True)
+            st.caption(
+                "**How to read:** darker cells indicate more missing data for that column "
+                "among the first 200 records."
+            )
+        else:
+            st.info("No rows available in Trends dataset after filters.")
+
+        st.divider()
+
+        # Toggle + download full Trends view
+        show_trn = st.toggle("Show Trends Dataset", value=False, key="p6_show_trn")
+        if show_trn:
+            st.dataframe(tr_view, use_container_width=True)
+        st.download_button(
+            "Download Trends Dataset",
+            tr_view.to_csv(index=False).encode("utf-8"),
+            "trends_filtered.csv",
+            "text/csv",
+            key="p6_dl_trn",
         )
 
 

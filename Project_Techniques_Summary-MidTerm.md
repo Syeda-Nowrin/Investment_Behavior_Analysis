@@ -1,4 +1,4 @@
-# 🧾 Project Techniques Summary  
+# 🧾 Project Techniques Summary (Used In MidTerm) 
 ### *Investment & Salary Analysis — Data Cleaning, Preparation, and Preprocessing Concepts*
 
 This project demonstrates a full **data preprocessing pipeline** — from raw survey and salary data cleaning to feature engineering and transformation — reflecting core **Data Science & Machine Learning course concepts** like **imputation**, **scaling**, **encoding**, **data transformation**, **sampling**, and **EDA**.

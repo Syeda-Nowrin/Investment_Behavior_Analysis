@@ -8,7 +8,7 @@ A Streamlit dashboard that analyzes investment behavior patterns across three da
 
 1. Project Overview  
 2. Key Features  
-3. Data Sources  
+3. Data Sources & Data Dictionary 
 4. Data Cleaning and Preprocessing  
 5. Feature Engineering  
 6. Statistical Analysis Methods  
@@ -57,15 +57,81 @@ This dashboard integrates three distinct datasets to analyze:
 - Global sidebar filters and story mode for guided narration  
 - Data export for filtered and cleaned outputs  
 
-## Data Sources
+## 📁 Data Sources & Data Dictionary
 
-| Dataset | Focus Area | Example Fields |
-|---------|------------|----------------|
-| Finance | Investment preferences and risk signals | Gender, Age/Age_Group, expected return, monitoring frequency |
-| Salary | Income, education, experience | Salary, Education, Years of Experience |
-| Trends | Market behavior patterns and return expectations | Investment avenue, duration, expected return |
+### Overview
+
+| Dataset | Records | Variables | Focus Area |
+|---------|---------|-----------|------------|
+| Finance | 243 | 25 | Investment preferences, risk appetite |
+| Salary | 1,792 | 8 | Income, education, experience |
+| Trends | 11,383 | 25 | Market behavior, monitoring patterns |
+
+### Finance Dataset - Data Dictionary
+
+| Variable | Type | Description | Values/Range |
+|----------|------|-------------|--------------|
+| `Gender` | Categorical | Respondent gender | Male, Female, Unknown |
+| `AGE` | Numeric | Age in years | 18-70 |
+| `Age_Group` | Categorical | Binned age | 18-24, 25-34, 35-44, 45-54, 55+ |
+| `Do you invest in Investment Avenues?` | Categorical | Investment participation | Yes, No |
+| `Preference rank for MUTUAL FUNDS investment` | Numeric | Ranking 1-7 | 1 (highest) to 7 (lowest) |
+| `Preference rank for EQUITY MARKET investment` | Numeric | Ranking 1-7 | 1 (highest) to 7 (lowest) |
+| `Preference rank for DEBENTURES investment` | Numeric | Ranking 1-7 | 1 (highest) to 7 (lowest) |
+| `Preference rank for GOVERNMENT BONDS investment` | Numeric | Ranking 1-7 | 1 (highest) to 7 (lowest) |
+| `Preference rank for FIXED DEPOSITS investment` | Numeric | Ranking 1-7 | 1 (highest) to 7 (lowest) |
+| `Preference rank for PPF investment` | Numeric | Ranking 1-7 | 1 (highest) to 7 (lowest) |
+| `Preference rank for GOLD investment` | Numeric | Ranking 1-7 | 1 (highest) to 7 (lowest) |
+| `Do you invest in Stock Market?` | Categorical | Stock market participation | Yes, No |
+| `What are the factors considered...` | Categorical | Investment factors | Returns, Risk, Locking Period |
+| `What is your investment objective?` | Categorical | Primary objective | Capital Appreciation, Income, Growth |
+| `What is your purpose behind investment?` | Categorical | Investment purpose | Wealth Creation, Savings, Returns |
+| `How long do you prefer to keep your money...` | Categorical | Investment tenure | <1 year, 1-3 years, 3-5 years, 5+ years |
+| `How often do you monitor your investment?` | Categorical | Monitoring frequency | Daily, Weekly, Monthly |
+| `How much return do you expect...` | Categorical | Expected return range | 10-20%, 20-30%, 30-40% |
+| `Which investment avenue do you mostly invest in?` | Categorical | Primary avenue | Mutual Fund, Equity, Fixed Deposits, Gold |
+
+### Salary Dataset - Data Dictionary
+
+| Variable | Type | Description | Values/Range |
+|----------|------|-------------|--------------|
+| `Age` | Numeric | Age in years | 18-65 |
+| `Gender` | Categorical | Respondent gender | Male, Female |
+| `Education Level` | Categorical | Highest education | High School, Bachelor's, Master's, PhD |
+| `Job Title` | Categorical | Current position | 100+ unique titles |
+| `Years of Experience` | Numeric | Work experience | 0-40 years |
+| `Salary` | Numeric | Annual salary (USD) | $30,000 - $250,000 |
+| `Age Group` | Categorical | Binned age (engineered) | 18-24, 25-34, 35-44, 45-54, 55+ |
+| `Experience Band` | Categorical | Binned experience (engineered) | 0-1, 2-4, 5-9, 10-14, 15-19, 20+ yrs |
+
+### Trends Dataset - Data Dictionary
+
+| Variable | Type | Description | Values/Range |
+|----------|------|-------------|--------------|
+| `gender` | Categorical | Respondent gender | Male, Female, Unknown |
+| `age` | Numeric | Age in years | 18-38 |
+| `Investment_Avenues` | Categorical | Invests in avenues | Yes, No, Unknown |
+| `Mutual_Funds` | Numeric | MF preference rank | 1-7 |
+| `Equity_Market` | Numeric | Equity preference rank | 1-7 |
+| `Debentures` | Numeric | Debentures preference rank | 1-7 |
+| `Government_Bonds` | Numeric | Gov bonds preference rank | 1-7 |
+| `Fixed_Deposits` | Numeric | FD preference rank | 1-7 |
+| `PPF` | Numeric | PPF preference rank | 1-7 |
+| `Gold` | Numeric | Gold preference rank | 1-7 |
+| `Stock_Marktet` | Categorical | Stock market participation | Yes, No |
+| `Factor` | Categorical | Key investment factor | Returns, Risk, Locking Period |
+| `Objective` | Categorical | Investment objective | Capital Appreciation, Income, Growth |
+| `Purpose` | Categorical | Investment purpose | Wealth Creation, Savings |
+| `Duration` | Categorical | Investment duration | <1 year, 1-3 years, 3-5 years, 5+ years |
+| `Invest_Monitor` | Categorical | Monitoring frequency | Daily, Weekly, Monthly |
+| `Expect` | Categorical | Expected return | 10-20%, 20-30%, 30-40% |
+| `Avenue` | Categorical | Primary investment avenue | Mutual Fund, Equity, FD, Gold |
+| `Is_Outlier_LOF` | Boolean | LOF outlier flag | True, False |
+
 
 All three sources are used to satisfy the multi-source requirement and to enable cross-dataset pattern discovery.
+
+
 
 ## Data Cleaning and Preprocessing
 

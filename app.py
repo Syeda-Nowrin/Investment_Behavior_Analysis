@@ -90,7 +90,13 @@ div[data-testid="stMetric"] > div {
 .concept-feature { background: #FFF3E0; color: #E65100; }
 .concept-model { background: #F3E5F5; color: #7B1FA2; }
 .concept-app { background: #FFEBEE; color: #C62828; }
-            
+
+[data-testid="stSidebar"] .stCheckbox label,
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
+    color: #2C3539 !important;
+    font-weight: 600 !important;
+}
+
 /* Compact sidebar */
 [data-testid="stSidebar"] {
     min-height: 100vh;

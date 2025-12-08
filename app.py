@@ -60,11 +60,21 @@ div[data-testid="stMetric"] > div {
   display: flex !important; flex-direction: column !important;
   align-items: center !important; text-align: center !important;
 }
-span[data-testid="stMetricLabel"], div[data-testid="stMetricValue"] {
-  text-align: center !important; color: #2B2B2B !important;
+[data-testid="stMetricLabel"],
+[data-testid="stMetricValue"] {
+  text-align: center !important;
+  color: #1F2937 !important;
+  font-weight: 600 !important;
 }
 
 [data-testid="stSidebar"] { background-color: #E0E0E0; }
+
+/* Ensure sidebar widget labels stay readable even if user switches to dark theme */
+[data-testid="stSidebar"] label {
+  color: #1F2937 !important;
+  font-weight: 600 !important;
+}
+
 
 /* Concept tags styling */
 .concept-tag {

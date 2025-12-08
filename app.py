@@ -3447,7 +3447,32 @@ elif page == "Summary and Insights":
             st.metric("ML Models", "4")
         with stat_c4:
             st.metric("Visualizations", "15+")
-       
+        
+        st.divider()
+
+        # Limitations & Future Work (add before the final conclusion)
+        st.markdown("## 7. Limitations and Future Work")
+
+        # Current Limitations
+        st.markdown("### Current Limitations")
+        with st.container(border=True):
+            st.markdown("""
+            - **Index-based alignment:** Datasets aligned by row index assumes correspondence  
+            - **Survey bias:** Self-reported data may have response biases  
+            - **Sample size:** Some demographic segments have limited representation  
+            - **Temporal snapshot:** Data represents a single point in time  
+            """)
+
+        # Future Enhancements
+        st.markdown("### Future Enhancements")
+        with st.container(border=True):
+            st.markdown("""
+            - **Deep Learning:** Implement neural networks for complex pattern recognition  
+            - **Time Series:** Add longitudinal analysis of investment behavior changes  
+            - **Cloud Deployment:** Deploy to Streamlit Cloud or AWS for wider access  
+            - **Real-time Data:** Integrate live market data feeds  
+            - **A/B Testing:** Implement recommendation testing framework  
+            """)
         
         # Conclusion
         st.markdown("---")

@@ -80,11 +80,50 @@ span[data-testid="stMetricLabel"], div[data-testid="stMetricValue"] {
 .concept-feature { background: #FFF3E0; color: #E65100; }
 .concept-model { background: #F3E5F5; color: #7B1FA2; }
 .concept-app { background: #FFEBEE; color: #C62828; }
+            
+/* Compact sidebar */
+[data-testid="stSidebar"] {
+    min-height: 100vh;
+}
+
+[data-testid="stSidebar"] .stButton > button {
+    padding: 4px 8px !important;
+    font-size: 0.8rem !important;
+    min-height: 32px !important;
+}
+
+[data-testid="stSidebar"] hr {
+    margin: 0.3rem 0 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdown"] p {
+    font-size: 0.75rem !important;
+    margin-bottom: 2px !important;
+}
+
+/* Reduce page title icon size */
+[data-testid="stSidebar"] span[style*="font-size: 60px"] {
+    font-size: 35px !important;
+}
+
+    [data-testid="stSidebar"] .stButton > button {
+    padding: 2px 6px !important;
+    font-size: 0.75rem !important;
+    min-height: 28px !important;
+    margin-bottom: 0px !important;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 0.5rem !important;
+}            
 </style>
 """, unsafe_allow_html=True)
 
 # LOAD DATASETS
 BASE_DIR = Path(__file__).resolve().parent
+
+CLEANED_DIR = BASE_DIR / "Cleaned Datasets"
+RAW_DIR = BASE_DIR / "Raw Datasets"
 
 @st.cache_data
 def load_data(fin_path, sal_path, trends_path):
@@ -97,9 +136,9 @@ def load_data(fin_path, sal_path, trends_path):
     return finance, salary, trends
 
 finance, salary, trends = load_data(
-    BASE_DIR / "Finance_Dataset-Cleaned.csv",
-    BASE_DIR / "Salary_Dataset-Cleaned.csv",
-    BASE_DIR / "Finance_Trends-Cleaned.csv"
+    CLEANED_DIR / "Finance_Dataset-Cleaned.csv",
+    CLEANED_DIR / "Salary_Dataset-Cleaned.csv",
+    CLEANED_DIR / "Finance_Trends-Cleaned.csv"
 )
 
 # HELPER FUNCTIONS
@@ -217,13 +256,9 @@ custom_blues = ["#0A1E5A", "#3A78C2", "#73A7D8", "#A8CAE4", "#EEF3FA"]
 
 # SIDEBAR SETUP
 st.sidebar.markdown("""
-<div style="padding: 8px 16px 12px; border-bottom: 1px solid rgba(180,200,220,0.25); margin-bottom: 8px;">
-  <div style="display: flex; flex-direction: column; align-items: center;">
-    <span style="font-size: 60px;">🪙</span>
-    <h1 style="font-size: 18px; font-weight: 800; color: #2C3539; text-align: center;">
-      Investment Behavior Analysis
-    </h1>
-  </div>
+<div style="padding: 2px 4px 2px; border-bottom: 1px solid rgba(180,200,220,0.25); margin-bottom: 2px; text-align: center;">
+    <div style="font-size: 40px; line-height: 1;">🪙</div>
+    <div style="font-size: 11px; font-weight: 700; color: #2C3539;">Investment Behavior Analysis</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -283,7 +318,7 @@ for page_name, concepts in nav_items.items():
         else:
             concept_tags += f'<span style="background:#FFEBEE;color:#C62828;padding:1px 4px;border-radius:8px;font-size:0.6rem;margin:1px;">{concept}</span>'
     
-    st.sidebar.markdown(f'<div style="margin:-8px 0 8px 5px;">{concept_tags}</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div style="margin:-12px 0 2px 5px; line-height: 1;">{concept_tags}</div>', unsafe_allow_html=True)
 
     
             
@@ -574,7 +609,9 @@ if page == "Overview Dashboard":
     num_tr = [c for c in tr.columns if pd.api.types.is_numeric_dtype(tr[c])]
     
     num_df = pd.concat([fn[num_fn], sl[num_sl], tr[num_tr]], axis=1)
-    num_df = num_df.loc[:, num_df.std(numeric_only=True) > 0]
+    std_vals = num_df.std(numeric_only=True)
+    valid_cols = std_vals[std_vals > 0].index.tolist()
+    num_df = num_df[valid_cols]
     
     preferred_keys = ["age", "expected", "salary", "experience", "monitor", "invests", "rank", "return"]
     prioritized = [c for c in num_df.columns if any(k in c.lower() for k in preferred_keys)]
@@ -2111,9 +2148,9 @@ elif page == "Data Explorer":
     # Load RAW datasets
     @st.cache_data
     def load_raw_data():
-        fin_raw = pd.read_csv(BASE_DIR / "Finance_Dataset-RAW.csv")
-        sal_raw = pd.read_csv(BASE_DIR / "Salary_Dataset-RAW.csv")
-        trends_raw = pd.read_csv(BASE_DIR / "Finance_Trends-RAW.csv")
+        fin_raw = pd.read_csv(RAW_DIR / "Finance_Dataset-RAW.csv")
+        sal_raw = pd.read_csv(RAW_DIR / "Salary_Dataset-RAW.csv")
+        trends_raw = pd.read_csv(RAW_DIR / "Finance_Trends-RAW.csv")
         return fin_raw, sal_raw, trends_raw
     
     try:

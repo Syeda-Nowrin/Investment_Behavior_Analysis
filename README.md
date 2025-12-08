@@ -322,29 +322,32 @@ scikit-learn>=1.3.0
 scipy>=1.11.0
 ```
 
-### File Structure
+### Repository Structure
 
 ```
-investment-behavior-analysis/
-├── appcl.py                      # Main Streamlit application
-├── requirements.txt              # Python dependencies
-├── README.md                     # This documentation
-│
-├── data/
-│   ├── Finance_Dataset-RAW.csv   # Raw finance survey data
+Investment_Behavior_Analysis/
+├── .devcontainer/
+├── Raw Datasets/
+│   ├── Finance_Dataset.csv
+│   ├── Salary_Dataset.csv
+│   └── Finance_Trends.csv
+├── Cleaned Datasets/
 │   ├── Finance_Dataset-Cleaned.csv
-│   ├── Salary_Dataset-RAW.csv    # Raw salary data
 │   ├── Salary_Dataset-Cleaned.csv
-│   ├── Finance_Trends-RAW.csv    # Raw trends data
 │   └── Finance_Trends-Cleaned.csv
-│
-└── assets/
-    └── screenshots/              # Dashboard screenshots
+├── Data Cleaning .py Files/
+│   ├── Clean_Finance_Dataset.py
+│   ├── Clean_Salary_Dataset.py
+│   └── Clean_Trends_Dataset.py
+├── app.py
+├── Project_Techniques_Summary.md
+├── requirements.txt
+├── .gitignore
+└── README.md
 ```
-
 ---
 
-## 📖 Usage Guide
+## Usage Guide
 
 ### Starting the Dashboard
 
@@ -377,7 +380,7 @@ The dashboard will open at `http://localhost:8501`
 
 ---
 
-## 🔑 Key Findings
+## Key Findings
 
 ### 1. Age Drives Risk Tolerance
 
@@ -409,31 +412,31 @@ The dashboard will open at `http://localhost:8501`
 
 ---
 
-## 📋 Rubric Alignment
+## Rubric Alignment
 
 ### Base Requirements (80%)
 
 | Requirement | Points | Status |
 |-------------|--------|--------|
-| Data Collection & Preparation | 15% | ✅ 3 datasets, advanced cleaning |
-| EDA & Visualization | 15% | ✅ 15+ viz types, statistical tests |
-| Data Processing & Feature Engineering | 15% | ✅ 5 engineered features |
-| Model Development & Evaluation | 20% | ✅ 4 models, CV, hyperparameter tuning |
-| Streamlit App Development | 25% | ✅ 9 pages, story mode, caching |
-| GitHub Documentation | 10% | ✅ This README, data dictionaries |
+| Data Collection & Preparation | 15% | 3 datasets, advanced cleaning |
+| EDA & Visualization | 15% | 15+ viz types, statistical tests |
+| Data Processing & Feature Engineering | 15% | 5 engineered features |
+| Model Development & Evaluation | 20% | 4 models, CV, hyperparameter tuning |
+| Streamlit App Development | 25% | 9 pages, story mode, caching |
+| GitHub Documentation | 10% | This README, data dictionaries |
 
 ### Above and Beyond (20%)
 
 | Category | Status |
 |----------|--------|
-| Advanced Modeling Techniques | ✅ GridSearchCV, ensemble methods |
-| Specialized Domain Application | ✅ Behavioral finance expertise |
-| Real-World Impact | ✅ Actionable recommendations |
-| Exceptional Visualization | ✅ 3D scatter, interactive ROC |
+| Advanced Modeling Techniques | GridSearchCV, ensemble methods |
+| Specialized Domain Application | Behavioral finance expertise |
+| Real-World Impact | Actionable recommendations |
+| Exceptional Visualization | 3D scatter, interactive ROC |
 
 ---
 
-## ⚠️ Limitations & Future Work
+## Limitations & Future Work
 
 ### Current Limitations
 
@@ -452,22 +455,22 @@ The dashboard will open at `http://localhost:8501`
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Course**: CMSE 830-001, Fall 2025
-- **Instructor**: Dr. Silvestri
+- **Instructor**: Dr. Luciano Germano Silvestri
 - **Data Sources**: Kaggle investment survey datasets
 - **Libraries**: Streamlit, Plotly, scikit-learn, pandas
 
 ---
 
-## 📄 License
+## License
 
 This project is created for educational purposes as part of CMSE 830 coursework.
 
 ---
 
-## 📬 Contact
+## Contact
 
 For questions or feedback, please open an issue in this repository.
 

@@ -3187,7 +3187,7 @@ elif page == "Summary and Insights":
     show_concepts(["Real-World Application", "Documentation", "Conclusions", "Impact Assessment"])
     
     # Two tabs: Report & User Guide
-    doc_tabs = st.tabs(["📊 Project Report", "📖 User Guide"])
+    doc_tabs = st.tabs(["Project Report", "User Guide"])
     
     # ===========================================
     # TAB 1: COMPREHENSIVE PROJECT REPORT

@@ -3221,22 +3221,22 @@ elif page == "Summary and Insights":
         
         with kf_c1:
             st.markdown("""
-            **📈 Age-Risk Relationship**
+            **Age-Risk Relationship**
             - Young investors (18-34): 92% higher aggressive allocation than 45+
             - ANOVA confirms significant difference (p < 0.05)
             
-            **💰 Income-Safety Paradox**  
+            **Income-Safety Paradox**  
             - Higher earners prefer stability over growth (r = -0.03)
             - Wealth preservation mindset dominates
             """)
         
         with kf_c2:
             st.markdown("""
-            **🎓 Education Premium**
+            **Education Premium**
             - Master's holders earn ~40% more than Bachelor's
             - Higher education → more diversified portfolios
             
-            **👥 Gender Patterns**
+            **Gender Patterns**
             - Males monitor portfolios more frequently
             - Females favor stable, long-term investments
             """)
@@ -3496,7 +3496,7 @@ elif page == "Summary and Insights":
         
         with feat_c1:
             st.markdown("""
-            **🎛️ Sidebar Filters**
+            **Sidebar Filters**
             - **Gender**: Filter by Male/Female
             - **Age Group**: Focus on specific demographics
             - **Education Level**: Filter salary data
@@ -3507,7 +3507,7 @@ elif page == "Summary and Insights":
         
         with feat_c2:
             st.markdown("""
-            **🔘 Story Mode Toggle**
+            **Story Mode Toggle**
             - **ON (Default)**: Shows narrative explanations
             - **OFF**: Clean view, just visualizations
             
@@ -3519,7 +3519,7 @@ elif page == "Summary and Insights":
         # Page-Specific Instructions
         st.markdown("### How to Use Key Pages")
         
-        with st.expander("📊 Predictive Modeling Page"):
+        with st.expander("Predictive Modeling Page"):
             st.markdown("""
             1. Navigate to **Predictive Modeling** page
             2. **Section A - Feature Selection**: Review which variables are used
@@ -3532,7 +3532,7 @@ elif page == "Summary and Insights":
             - ROC curves indicate model discrimination ability
             """)
         
-        with st.expander("🔍 Data Explorer Page"):
+        with st.expander("Data Explorer Page"):
             st.markdown("""
             1. Navigate to **Data Explorer** page
             2. Select dataset tab: **Finance**, **Salary**, or **Trends**

@@ -3452,9 +3452,9 @@ elif page == "Summary and Insights":
         # Conclusion
         st.markdown("---")
         insight_box("""
-        **Conclusion:** As individuals mature in age, experience, and education, their investment mindset evolves 
+        As individuals mature in age, experience, and education, their investment mindset evolves 
         from aggressive growth-seeking to balanced wealth preservation. This project provides a data-driven 
-        foundation for understanding not just *what* people invest in, but *why* they make these choices.
+        foundation for understanding not just what people invest in, but why they make these choices.
         """)
     
     # ===========================================

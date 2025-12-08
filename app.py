@@ -1813,7 +1813,7 @@ elif page == "Predictive Modeling":
                     "Logistic Regression": LogisticRegression(max_iter=1000, multi_class="multinomial"),
                     "Random Forest": RandomForestClassifier(n_estimators=200, random_state=42),
                     "K-Nearest Neighbors": KNeighborsClassifier(n_neighbors=7),
-                    "Decision Tree": DecisionTreeClassifier(max_depth=None, random_state=42),
+                    "Decision Tree": DecisionTreeClassifier(max_depth=5, min_samples_split=10, random_state=42)
                 }
                 
                 fitted_models = {}

@@ -230,7 +230,7 @@ def show_concepts(concepts):
     
     st.markdown(f"""
     <div style="background: rgba(100, 149, 237, 0.08); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-        <strong>➠ Rubric Concepts Covered:</strong> {tags}
+        <strong>➠ Concepts Covered:</strong> {tags}
     </div>
     """, unsafe_allow_html=True)
 

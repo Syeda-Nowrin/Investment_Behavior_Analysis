@@ -1810,7 +1810,7 @@ elif page == "Predictive Modeling":
                 st.markdown("1. Logistic Regression\n2. Random Forest\n3. K-Nearest Neighbors\n4. Decision Tree")
                 
                 base_models = {
-                    "Logistic Regression": LogisticRegression(max_iter=1000, multi_class="multinomial"),
+                    "Logistic Regression": LogisticRegression(max_iter=1000, solver="lbfgs"),
                     "Random Forest": RandomForestClassifier(n_estimators=200, random_state=42),
                     "K-Nearest Neighbors": KNeighborsClassifier(n_neighbors=7),
                     "Decision Tree": DecisionTreeClassifier(max_depth=5, min_samples_split=10, random_state=42)
